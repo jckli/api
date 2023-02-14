@@ -2,11 +2,11 @@ package index
 
 import (
 	"encoding/json"
-
 	"github.com/valyala/fasthttp"
+	"github.com/rueian/rueidis"
 )
 
-func IndexHandler(ctx *fasthttp.RequestCtx) {
+func IndexHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	ctx.Response.Header.SetCanonical([]byte("Content-Type"), []byte("application/json"))
 	ctx.Response.SetStatusCode(200)
 	response := &IndexResponse{
