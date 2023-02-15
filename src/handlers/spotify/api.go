@@ -61,6 +61,22 @@ func getCurrentlyPlaying(access_token, market string) (*SpotifyCurrentlyPlayingR
 	return respBody, nil
 }
 
+func getRecentlyPlayed(access_token string, limit int) (*SpotifyRecentlyPlayedResponse, error) {
+	urls := "https://api.spotify.com/v1/me/player/recently-played?limit=" + fmt.Sprintf("%v", limit)
+	resp, err := getRequest(urls, access_token)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody := &SpotifyRecentlyPlayedResponse{}
+	if err = json.Unmarshal(resp, respBody); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return nil, err
+	}
+	
+	return respBody, nil
+}
+
 func getRequest(url, access_token string) ([]byte, error) {
 	client := &fasthttp.Client{}
 	req := fasthttp.AcquireRequest()
@@ -76,7 +92,7 @@ func getRequest(url, access_token string) ([]byte, error) {
 	if err := client.Do(req, resp); err != nil {
 		return nil, err
 	}
-	if resp.StatusCode() == 401 {
+	if resp.StatusCode() == 401 || resp.StatusCode() == 403 {
 		return nil, fmt.Errorf("Unauthorized")
 	}
 
