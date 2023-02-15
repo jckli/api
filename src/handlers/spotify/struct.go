@@ -167,7 +167,7 @@ type SpotifyRecentlyPlayedResponse struct {
 		Before string `json:"before"`
 	} `json:"cursors"`
 	Total int `json:"total"`
-	Items []SpotifyTopItem `json:"items"`
+	Items []SpotifyRecentlyPlayedItem `json:"items"`
 }
 
 type SpotifyRecentlyPlayedItem struct {
