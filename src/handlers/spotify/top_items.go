@@ -14,7 +14,7 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	item_type := ctx.UserValue("itype")
 	args := ctx.QueryArgs()
 	timeRange := string(args.Peek("time_range"))
-	if timeRange == "" {
+	if timeRange == "" || (timeRange != "short_term" && timeRange != "medium_term" && timeRange != "long_term") {
 		timeRange = "long_term"
 	}
 	limit, err := strconv.Atoi(string(args.Peek("limit")))
