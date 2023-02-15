@@ -3,7 +3,6 @@ package spotify
 import (
 	"encoding/json"
 	"context"
-	"fmt"
 	"github.com/valyala/fasthttp"
 	"github.com/rueian/rueidis"
 )
@@ -43,32 +42,44 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 			}
 			return
 		}
-		redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Nx().Build()).Error()
+		redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Build()).Error()
 		access_token = refresh_data.AccessToken
 	}
 
-	fmt.Println(access_token)
-
 	currently_playing, err := getCurrentlyPlaying(access_token, market)
-	if err == fmt.Errorf("Unauthorized") {
-		refresh_data, err := getSpotifyToken()
-		if err != nil {
-			ctx.Response.SetStatusCode(401)
-			response := &DefaultResponse{
-				Status: 401,
-				Data: &MessageData{
-					Message: "Cannot refresh Spotify token.",
-				},
+	if err != nil {
+		if err.Error() == "Unauthorized" {
+			refresh_data, err := getSpotifyToken()
+			if err != nil {
+				ctx.Response.SetStatusCode(401)
+				response := &DefaultResponse{
+					Status: 401,
+					Data: &MessageData{
+						Message: "Cannot refresh Spotify token.",
+					},
+				}
+				if err := json.NewEncoder(ctx).Encode(response); err != nil {
+					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+				}
+				return
 			}
-			if err := json.NewEncoder(ctx).Encode(response); err != nil {
-				ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+			redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Build()).Error()
+			access_token = refresh_data.AccessToken
+			currently_playing, err = getCurrentlyPlaying(access_token, market)
+			if err != nil {
+				ctx.Response.SetStatusCode(401)
+				response := &DefaultResponse{
+					Status: 401,
+					Data: &MessageData{
+						Message: "Cannot get Spotify currently playing.",
+					},
+				}
+				if err := json.NewEncoder(ctx).Encode(response); err != nil {
+					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+				}
+				return
 			}
-			return
-		}
-		redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Nx().Build()).Error()
-		access_token = refresh_data.AccessToken
-		currently_playing, err = getCurrentlyPlaying(access_token, market)
-		if err != nil {
+		} else{
 			ctx.Response.SetStatusCode(401)
 			response := &DefaultResponse{
 				Status: 401,
@@ -81,18 +92,6 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 			}
 			return
 		}
-	} else if err != nil {
-		ctx.Response.SetStatusCode(401)
-		response := &DefaultResponse{
-			Status: 401,
-			Data: &MessageData{
-				Message: "Cannot get Spotify currently playing.",
-			},
-		}
-		if err := json.NewEncoder(ctx).Encode(response); err != nil {
-			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-		}
-		return
 	}
 	if currently_playing == nil {
 		ctx.Response.SetStatusCode(404)
