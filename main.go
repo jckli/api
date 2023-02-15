@@ -20,6 +20,6 @@ func main() {
 
 	port := os.Getenv("PORT")
 	fmt.Println("API on port: " + port)
-	log.Fatal(fasthttp.ListenAndServe("localhost:" + port, r.Handler))
+	log.Fatal(fasthttp.ListenAndServe(":" + port, r.Handler))
 }
 
