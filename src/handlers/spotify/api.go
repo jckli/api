@@ -35,6 +35,9 @@ func getTopItems(access_token, item_type, time_range string, limit int) (*Spotif
 	if err != nil {
 		return nil, err
 	}
+	if resp == nil {
+		return nil, nil
+	}
 
 	respBody := &SpotifyTopItemsResponse{}
 	if err = json.Unmarshal(resp, respBody); err != nil {
@@ -51,6 +54,9 @@ func getCurrentlyPlaying(access_token, market string) (*SpotifyCurrentlyPlayingR
 	if err != nil {
 		return nil, err
 	}
+	if resp == nil {
+		return nil, nil
+	}
 
 	respBody := &SpotifyCurrentlyPlayingResponse{}
 	if err = json.Unmarshal(resp, respBody); err != nil {
@@ -66,6 +72,9 @@ func getRecentlyPlayed(access_token string, limit int) (*SpotifyRecentlyPlayedRe
 	resp, err := getRequest(urls, access_token)
 	if err != nil {
 		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
 	}
 
 	respBody := &SpotifyRecentlyPlayedResponse{}

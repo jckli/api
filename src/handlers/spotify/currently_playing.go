@@ -1,10 +1,10 @@
 package spotify
 
 import (
-	"encoding/json"
 	"context"
-	"github.com/valyala/fasthttp"
+	"encoding/json"
 	"github.com/rueian/rueidis"
+	"github.com/valyala/fasthttp"
 )
 
 func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
