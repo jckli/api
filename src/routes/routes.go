@@ -15,4 +15,7 @@ func InitRoutes(r *router.Router, redis rueidis.Client) {
 	r.GET("/spotify/top-items/{itype}", func(ctx *fasthttp.RequestCtx) {
 		spotify.TopItemsHandler(ctx, redis)
 	})
+	r.GET("/spotify/currently-playing", func(ctx *fasthttp.RequestCtx) {
+		spotify.CurrentlyPlayingHandler(ctx, redis)
+	})
 }

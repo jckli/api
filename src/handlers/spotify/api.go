@@ -45,6 +45,22 @@ func getTopItems(access_token, item_type, time_range string, limit int) (*Spotif
 	return respBody, nil
 }
 
+func getCurrentlyPlaying(access_token, market string) (*SpotifyCurrentlyPlayingResponse, error) {
+	urls := "https://api.spotify.com/v1/me/player/currently-playing?market=" + market
+	resp, err := getRequest(urls, access_token)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody := &SpotifyCurrentlyPlayingResponse{}
+	if err = json.Unmarshal(resp, respBody); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return nil, err
+	}
+
+	return respBody, nil
+}
+
 func getRequest(url, access_token string) ([]byte, error) {
 	client := &fasthttp.Client{}
 	req := fasthttp.AcquireRequest()
