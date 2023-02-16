@@ -2,10 +2,11 @@ package routes
 
 import (
 	"github.com/fasthttp/router"
-	"github.com/valyala/fasthttp"
-	"github.com/rueian/rueidis"
 	"github.com/jckli/api/src/handlers/index"
 	"github.com/jckli/api/src/handlers/spotify"
+	"github.com/jckli/api/src/handlers/valorant"
+	"github.com/rueian/rueidis"
+	"github.com/valyala/fasthttp"
 )
 
 func InitRoutes(r *router.Router, redis rueidis.Client) {
@@ -20,5 +21,9 @@ func InitRoutes(r *router.Router, redis rueidis.Client) {
 	})
 	r.GET("/spotify/recently-played", func(ctx *fasthttp.RequestCtx) {
 		spotify.RecentlyPlayedHandler(ctx, redis)
+	})
+
+	r.GET("/valorant/mmr/players/{puuid}", func(ctx *fasthttp.RequestCtx) {
+		valorant.MmrFetchPlayerHandler(ctx, redis)
 	})
 }
