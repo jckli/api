@@ -1,12 +1,12 @@
 package spotify
 
 import (
-	"encoding/json"
 	"context"
-	"strconv"
+	"encoding/json"
 	"fmt"
-	"github.com/valyala/fasthttp"
+	"strconv"
 	"github.com/rueian/rueidis"
+	"github.com/valyala/fasthttp"
 )
 
 func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
@@ -90,7 +90,7 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 				}
 				return
 			}
-		} else{
+		} else {
 			ctx.Response.SetStatusCode(401)
 			response := &DefaultResponse{
 				Status: 401,

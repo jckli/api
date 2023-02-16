@@ -79,7 +79,7 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 				}
 				return
 			}
-		} else{
+		} else {
 			ctx.Response.SetStatusCode(401)
 			response := &DefaultResponse{
 				Status: 401,
