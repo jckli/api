@@ -14,6 +14,7 @@ func InitRoutes(r *router.Router, redis rueidis.Client) {
 		index.IndexHandler(ctx, redis)
 	})
 
+	// spotify routes
 	r.GET("/spotify", func(ctx *fasthttp.RequestCtx) {
 		spotify.IndexHandler(ctx, redis)
 	})
@@ -27,6 +28,7 @@ func InitRoutes(r *router.Router, redis rueidis.Client) {
 		spotify.RecentlyPlayedHandler(ctx, redis)
 	})
 
+	// valorant routes
 	r.GET("/valorant", func(ctx *fasthttp.RequestCtx) {
 		valorant.IndexHandler(ctx, redis)
 	})
