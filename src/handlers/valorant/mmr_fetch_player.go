@@ -27,7 +27,6 @@ func MmrFetchPlayerHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		return
 	}
 	if auth == nil {
-		fmt.Println("here :(")
 		authData, err := getAuth()
 		if err != nil {
 			ctx.Response.SetStatusCode(401)
