@@ -2,7 +2,6 @@ package valorant
 
 import (
 	"os"
-	"bytes"
 	"fmt"
 	"encoding/json"
 	"github.com/jckli/valorant.go/v2"
@@ -22,15 +21,12 @@ func getMmr(auth *val.AuthBody, puuid string) (*MMRFetchPlayerResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode == 400 || resp.StatusCode == 403 {
+		return nil, fmt.Errorf("bad_claims")
+	}
 	defer resp.Body.Close()
 	body := new(MMRFetchPlayerResponse)
 	json.NewDecoder(resp.Body).Decode(body)
-
-	buf := new(bytes.Buffer)
-    buf.ReadFrom(resp.Body)
-    newStr := buf.String()
-
-	fmt.Println("aaa: " + newStr)
 
 	return body, nil
 }

@@ -10,7 +10,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/jckli/valorant.go v0.0.0-20230216214650-f476bab1fb5e // indirect
+	github.com/jckli/valorant.go v0.0.0-20230217051521-fde340657427 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/refraction-networking/utls v1.1.1 // indirect
 	github.com/rueian/rueidis v0.0.93 // indirect
