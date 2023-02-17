@@ -30,3 +30,23 @@ func getMmr(auth *val.AuthBody, puuid string) (*MMRFetchPlayerResponse, error) {
 
 	return body, nil
 }
+
+func getCompetitiveUpdates(auth *val.AuthBody, puuid string, startIndex int, endIndex int) (*FetchCompetitiveUpdatesResponse, error) {
+	resp, err := val.FetchGet(
+		fmt.Sprintf(
+			"/mmr/v1/players/%v/competitiveupdates?startIndex=%v&endIndex=%v", 
+			puuid, startIndex, endIndex,
+		), "pd", auth,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 400 || resp.StatusCode == 403 {
+		return nil, fmt.Errorf("bad_claims")
+	}
+	defer resp.Body.Close()
+	body := new(FetchCompetitiveUpdatesResponse)
+	json.NewDecoder(resp.Body).Decode(body)
+
+	return body, nil
+}

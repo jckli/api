@@ -49,3 +49,22 @@ type MMRFetchPlayerResponse struct {
 	IsLeaderboardAnonymized bool `json:"IsLeaderboardAnonymized"`
 	IsActRankBadgeHidden bool `json:"IsActRankBadgeHidden"`
 }
+
+type FetchCompetitiveUpdatesResponse struct {
+	Version int `json:"Version"`
+	Subject string `json:"Subject"`
+	Matches []struct {
+		MatchId string `json:"MatchID"`
+		MapId string `json:"MapID"`
+		SeasonId string `json:"SeasonID"`
+		MatchStartTime int `json:"MatchStartTime"`
+		TierAfterUpdate int `json:"TierAfterUpdate"`
+		TierBeforeUpdate int `json:"TierBeforeUpdate"`
+		RankedRatingAfterUpdate int `json:"RankedRatingAfterUpdate"`
+		RankedRatingBeforeUpdate int `json:"RankedRatingBeforeUpdate"`
+		RankedRatingEarned int `json:"RankedRatingEarned"`
+		RankedRatingPerformanceBonus int `json:"RankedRatingPerformanceBonus"`
+		CompetitiveMovement string `json:"CompetitiveMovement"`
+		AfkPenalty int `json:"AFKPenalty"`
+	} `json:"Matches"`
+}
