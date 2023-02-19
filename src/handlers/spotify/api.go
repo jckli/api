@@ -29,8 +29,8 @@ func getSpotifyToken() (*SpotifyRefreshResponse, error)  {
 	return respBody, nil
 }
 
-func getTopItems(access_token, item_type, time_range string, limit int) (*SpotifyTopItemsResponse, error) {
-	urls := "https://api.spotify.com/v1/me/top/" + item_type + "?time_range=" + time_range + "&limit=" + fmt.Sprintf("%v", limit)
+func getTopArtists(access_token, time_range string, limit int) (*SpotifyTopArtistsResponse, error) {
+	urls := "https://api.spotify.com/v1/me/top/artists" + "?time_range=" + time_range + "&limit=" + fmt.Sprintf("%v", limit)
 	resp, err := getRequest(urls, access_token)
 	if err != nil {
 		return nil, err
@@ -38,8 +38,27 @@ func getTopItems(access_token, item_type, time_range string, limit int) (*Spotif
 	if resp == nil {
 		return nil, nil
 	}
+	
+	respBody := &SpotifyTopArtistsResponse{}
+	if err = json.Unmarshal(resp, respBody); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return nil, err
+	}
 
-	respBody := &SpotifyTopItemsResponse{}
+	return respBody, nil
+}
+
+func getTopTracks(access_token, time_range string, limit int) (*SpotifyTopTracksResponse, error) {
+	urls := "https://api.spotify.com/v1/me/top/tracks" + "?time_range=" + time_range + "&limit=" + fmt.Sprintf("%v", limit)
+	resp, err := getRequest(urls, access_token)
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
+	}
+	
+	respBody := &SpotifyTopTracksResponse{}
 	if err = json.Unmarshal(resp, respBody); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return nil, err

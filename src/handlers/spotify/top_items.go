@@ -3,7 +3,6 @@ package spotify
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
@@ -57,7 +56,12 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		access_token = refresh_data.AccessToken
 	}
 
-	top_items, err := getTopItems(access_token, fmt.Sprintf("%v", item_type), timeRange, limit)
+	var top_items interface{}
+	if item_type == "artists" {
+		top_items, err = getTopArtists(access_token, timeRange, limit)
+	} else if item_type == "tracks" {
+		top_items, err = getTopTracks(access_token, timeRange, limit)
+	}
 	if err != nil {
 		if err.Error() == "Unauthorized" {
 			refresh_data, err := getSpotifyToken()
@@ -76,7 +80,11 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 			}
 			redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Build()).Error()
 			access_token = refresh_data.AccessToken
-			top_items, err = getTopItems(access_token, fmt.Sprintf("%v", item_type), timeRange, limit)
+			if item_type == "artists" {
+				top_items, err = getTopArtists(access_token, timeRange, limit)
+			} else if item_type == "tracks" {
+				top_items, err = getTopTracks(access_token, timeRange, limit)
+			}
 			if err != nil {
 				ctx.Response.SetStatusCode(401)
 				response := &DefaultResponse{
