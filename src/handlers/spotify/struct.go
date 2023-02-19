@@ -16,7 +16,7 @@ type SpotifyRefreshResponse struct {
 	Scope string `json:"scope"`
 }
 
-type SpotifyTopItemsResponse struct {
+type SpotifyTopTracksResponse struct {
 	Href string `json:"href"`
 	Limit int `json:"limit"`
 	Next string `json:"next"`
@@ -24,6 +24,38 @@ type SpotifyTopItemsResponse struct {
 	Previous string `json:"previous"`
 	Total int `json:"total"`
 	Items []SpotifyTrack `json:"items"`
+}
+
+type SpotifyTopArtistsResponse struct {
+	Href string `json:"href"`
+	Limit int `json:"limit"`
+	Next string `json:"next"`
+	Offset int `json:"offset"`
+	Previous string `json:"previous"`
+	Total int `json:"total"`
+	Items []SpotifyArtist `json:"items"`
+}
+
+type SpotifyArtist struct {
+	ExternalUrls struct {
+		Spotify string `json:"spotify"`
+	} `json:"external_urls"`
+	Followers struct {
+		Href interface{} `json:"href"`
+		Total int `json:"total"`
+	} `json:"followers"`
+	Genres []string `json:"genres"`
+	Href string `json:"href"`
+	Id string `json:"id"`
+	Images []struct {
+		Height int `json:"height"`
+		Url string `json:"url"`
+		Width int `json:"width"`
+	} `json:"images"`
+	Name string `json:"name"`
+	Popularity int `json:"popularity"`
+	Type string `json:"type"`
+	Uri string `json:"uri"`
 }
 
 type SpotifyTrack struct {
@@ -84,17 +116,6 @@ type SpotifyAlbum struct {
 	ReleaseDate string `json:"release_date"`
 	ReleaseDatePrecision string `json:"release_date_precision"`
 	TotalTracks int `json:"total_tracks"`
-	Type string `json:"type"`
-	Uri string `json:"uri"`
-}
-
-type SpotifyArtist struct {
-	ExternalUrls struct {
-		Spotify string `json:"spotify"`
-	} `json:"external_urls"`
-	Href string `json:"href"`
-	Id string `json:"id"`
-	Name string `json:"name"`
 	Type string `json:"type"`
 	Uri string `json:"uri"`
 }
