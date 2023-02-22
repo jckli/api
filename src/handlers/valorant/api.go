@@ -50,3 +50,23 @@ func getCompetitiveUpdates(auth *val.AuthBody, puuid string, startIndex int, end
 
 	return body, nil
 }
+
+func getMatchDetails(auth *val.AuthBody, matchid string) (*FetchCompetitiveUpdatesResponse, error) {
+	resp, err := val.FetchGet(
+		fmt.Sprintf(
+			"/match-details/v1/matches/%v", 
+			matchid,
+		), "pd", auth,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 400 || resp.StatusCode == 403 {
+		return nil, fmt.Errorf("bad_claims")
+	}
+	defer resp.Body.Close()
+	body := new(FetchCompetitiveUpdatesResponse)
+	json.NewDecoder(resp.Body).Decode(body)
+
+	return body, nil
+}
