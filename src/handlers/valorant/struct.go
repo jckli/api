@@ -90,7 +90,7 @@ type FetchMatchDetailsResponse struct {
 		SeasonId string `json:"seasonId"`
 		CompletionState string `json:"completionState"`
 		PlatformType string `json:"platformType"`
-		PartyRrPenalties []interface{} `json:"partyRrPenalties"`
+		PartyRrPenalties interface{} `json:"partyRRPenalties"`
 		ShouldMatchDisablePenalties bool `json:"shouldMatchDisablePenalties"`
 	} `json:"matchInfo"`
 }

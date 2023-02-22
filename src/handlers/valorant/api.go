@@ -3,7 +3,6 @@ package valorant
 import (
 	"os"
 	"fmt"
-	"io"
 	"encoding/json"
 	"github.com/jckli/valorant.go/v2"
 )
@@ -65,10 +64,6 @@ func getMatchDetails(auth *val.AuthBody, matchid string) (*FetchMatchDetailsResp
 	if resp.StatusCode == 400 || resp.StatusCode == 403 {
 		return nil, fmt.Errorf("bad_claims")
 	}
-
-	b, _ := io.ReadAll(resp.Body)
-
-	fmt.Println(string(b))
 
 	defer resp.Body.Close()
 	body := new(FetchMatchDetailsResponse)
