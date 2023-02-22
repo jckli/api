@@ -3,6 +3,7 @@ package valorant
 import (
 	"os"
 	"fmt"
+	"io"
 	"encoding/json"
 	"github.com/jckli/valorant.go/v2"
 )
@@ -51,7 +52,7 @@ func getCompetitiveUpdates(auth *val.AuthBody, puuid string, startIndex int, end
 	return body, nil
 }
 
-func getMatchDetails(auth *val.AuthBody, matchid string) (*FetchCompetitiveUpdatesResponse, error) {
+func getMatchDetails(auth *val.AuthBody, matchid string) (*FetchMatchDetailsResponse, error) {
 	resp, err := val.FetchGet(
 		fmt.Sprintf(
 			"/match-details/v1/matches/%v", 
@@ -64,8 +65,13 @@ func getMatchDetails(auth *val.AuthBody, matchid string) (*FetchCompetitiveUpdat
 	if resp.StatusCode == 400 || resp.StatusCode == 403 {
 		return nil, fmt.Errorf("bad_claims")
 	}
+
+	b, _ := io.ReadAll(resp.Body)
+
+	fmt.Println(string(b))
+
 	defer resp.Body.Close()
-	body := new(FetchCompetitiveUpdatesResponse)
+	body := new(FetchMatchDetailsResponse)
 	json.NewDecoder(resp.Body).Decode(body)
 
 	return body, nil

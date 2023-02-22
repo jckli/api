@@ -68,3 +68,29 @@ type FetchCompetitiveUpdatesResponse struct {
 		AfkPenalty int `json:"AFKPenalty"`
 	} `json:"Matches"`
 }
+
+type FetchMatchDetailsResponse struct {
+	MatchInfo struct {
+		MatchId string `json:"matchId"`
+		MapId string `json:"mapId"`
+		GamePodId string `json:"gamePodId"`
+		GameLoopZone string `json:"gameLoopZone"`
+		GameServerAddress string `json:"gameServerAddress"`
+		GameVersion string `json:"gameVersion"`
+		GameLengthMillis int `json:"gameLengthMillis"`
+		GameStartMillis int `json:"gameStartMillis"`
+		ProvisioningFlowId string `json:"provisioningFlowID"`
+		IsCompleted bool `json:"isCompleted"`
+		CustomGameName string `json:"customGameName"`
+		ForcePostProcessing bool `json:"forcePostProcessing"`
+		QueueId string `json:"queueID"`
+		GameMode string `json:"gameMode"`
+		IsRanked bool `json:"isRanked"`
+		IsMatchSampled bool `json:"isMatchSampled"`
+		SeasonId string `json:"seasonId"`
+		CompletionState string `json:"completionState"`
+		PlatformType string `json:"platformType"`
+		PartyRrPenalties []interface{} `json:"partyRrPenalties"`
+		ShouldMatchDisablePenalties bool `json:"shouldMatchDisablePenalties"`
+	} `json:"matchInfo"`
+}
