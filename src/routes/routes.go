@@ -38,5 +38,7 @@ func InitRoutes(r *router.Router, redis rueidis.Client) {
 	r.GET("/valorant/mmr/players/{puuid}/competitive-updates", func(ctx *fasthttp.RequestCtx) {
 		valorant.CompetitiveUpdatesHandler(ctx, redis)
 	})
-
+	r.GET("/valorant/match-details/{matchid}", func(ctx *fasthttp.RequestCtx) {
+		valorant.MatchDetailsHandler(ctx, redis)
+	})
 }
