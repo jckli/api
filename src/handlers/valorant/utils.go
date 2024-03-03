@@ -2,11 +2,11 @@ package valorant
 
 import (
 	"context"
-	"github.com/jckli/valorant.go/v2"
+	"github.com/jckli/valorant.go"
 	"github.com/rueian/rueidis"
 )
 
-func redisGetAuth(redis rueidis.Client) (*val.AuthBody, error) {
+func redisGetAuth(redis rueidis.Client) (*valorant.Auth, error) {
 	redis_ctx := context.Background()
 	cookies, cookiesErr := redis.Do(redis_ctx, redis.B().Get().Key("valorant_cookies").Build()).ToString()
 	if (cookiesErr != nil) || (cookies == "") {
@@ -28,28 +28,31 @@ func redisGetAuth(redis rueidis.Client) (*val.AuthBody, error) {
 	if (versionErr != nil) || (version == "") {
 		return nil, versionErr
 	}
-	puuid, puuidErr := redis.Do(redis_ctx, redis.B().Get().Key("valorant_puuid").Build()).ToString()
-	if puuidErr != nil {
-		return nil, puuidErr
+	id_token, idTokenErr := redis.Do(redis_ctx, redis.B().Get().Key("valorant_id_token").Build()).ToString()
+	if (idTokenErr != nil) || (id_token == "") {
+		return nil, idTokenErr
 	}
-	return &val.AuthBody{
-		Cookies:     cookies,
-		Region:      region,
-		AccessToken: access_token,
-		Token:       token,
-		Version:     version,
-		Puuid:       puuid,
-	}, nil
+	expires_in, expiresInErr := redis.Do(redis_ctx, redis.B().Get().Key("valorant_expires_in").Build()).ToString()
+	if (expiresInErr != nil) || (expires_in == "") {
+		return nil, expiresInErr
+	}
+
+	auth, err := valorant.CreateAuth(cookies, region, access_token, id_token, expires_in, token, version)
+	if err != nil {
+		return nil, err
+	}
+	return auth, nil
+
 }
 
-func redisSetAuth(redis rueidis.Client, auth *val.AuthBody) error {
+func redisSetAuth(redis rueidis.Client, a *valorant.Auth) error {
 	redis_ctx := context.Background()
-	redis.Do(redis_ctx, redis.B().Set().Key("valorant_cookies").Value(auth.Cookies).Build()).Error()
-	redis.Do(redis_ctx, redis.B().Set().Key("valorant_region").Value(auth.Region).Build()).Error()
-	redis.Do(redis_ctx, redis.B().Set().Key("valorant_access_token").Value(auth.AccessToken).Build()).Error()
-	redis.Do(redis_ctx, redis.B().Set().Key("valorant_token").Value(auth.Token).Build()).Error()
-	redis.Do(redis_ctx, redis.B().Set().Key("valorant_version").Value(auth.Version).Build()).Error()
-	redis.Do(redis_ctx, redis.B().Set().Key("valorant_puuid").Value(auth.Puuid).Build()).Error()
+	redis.Do(redis_ctx, redis.B().Set().Key("valorant_cookies").Value(a.CookieJar).Build()).Error()
+	redis.Do(redis_ctx, redis.B().Set().Key("valorant_region").Value(a.Region).Build()).Error()
+	redis.Do(redis_ctx, redis.B().Set().Key("valorant_access_token").Value(a.AccessToken).Build()).Error()
+	redis.Do(redis_ctx, redis.B().Set().Key("valorant_token").Value(a.Token).Build()).Error()
+	redis.Do(redis_ctx, redis.B().Set().Key("valorant_version").Value(a.Version).Build()).Error()
+	redis.Do(redis_ctx, redis.B().Set().Key("valorant_id_token").Value(a.IdToken).Build()).Error()
+	redis.Do(redis_ctx, redis.B().Set().Key("valorant_expires_in").Value(a.ExpiresIn).Build()).Error()
 	return nil
 }
-	

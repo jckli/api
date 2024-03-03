@@ -3,9 +3,10 @@ package valorant
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
+	"github.com/jckli/valorant.go/pvp"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
+	"strconv"
 )
 
 func CompetitiveUpdatesHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
@@ -22,22 +23,8 @@ func CompetitiveUpdatesHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		endIndex = 20
 	}
 
-
 	auth, err := redisGetAuth(redis)
-	if err != nil {
-		ctx.Response.SetStatusCode(401)
-		response := &DefaultResponse{
-			Status: 401,
-			Data: &MessageData{
-				Message: "Cannot access Redis Database.",
-			},
-		}
-		if err := json.NewEncoder(ctx).Encode(response); err != nil {
-			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-		}
-		return
-	}
-	if auth == nil {
+	if auth == nil || err != nil {
 		authData, err := getAuth()
 		if err != nil {
 			ctx.Response.SetStatusCode(401)
@@ -55,51 +42,18 @@ func CompetitiveUpdatesHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		redisSetAuth(redis, authData)
 		auth = authData
 	}
-	
 
-	competitiveUpdates, err := getCompetitiveUpdates(auth, fmt.Sprintf("%v", puuid), startIndex, endIndex)
+	competitiveUpdates, err := pvp.GetCompetitiveUpdates(auth, fmt.Sprintf("%v", puuid), pvp.WithStartIndex(startIndex), pvp.WithEndIndex(endIndex))
 	if err != nil {
-		if err.Error() == "bad_claims" {
-			reauth, err := getAuth()
-			if err != nil {
-				ctx.Response.SetStatusCode(401)
-				response := &DefaultResponse{
-					Status: 401,
-					Data: &MessageData{
-						Message: "Cannot get valorant authentication.",
-					},
-				}
-				if err := json.NewEncoder(ctx).Encode(response); err != nil {
-					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-				}
-				return
-			}
-			redisSetAuth(redis, reauth)
-			competitiveUpdates, err = getCompetitiveUpdates(reauth, fmt.Sprintf("%v", puuid), startIndex, endIndex)
-			if err != nil {
-				ctx.Response.SetStatusCode(401)
-				response := &DefaultResponse{
-					Status: 401,
-					Data: &MessageData{
-						Message: "Cannot get valorant competitive updates.",
-					},
-				}
-				if err := json.NewEncoder(ctx).Encode(response); err != nil {
-					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-				}
-				return
-			}
-		} else {
-			ctx.Response.SetStatusCode(401)
-			response := &DefaultResponse{
-				Status: 401,
-				Data: &MessageData{
-					Message: "Cannot get valorant competitive updates.",
-				},
-			}
-			if err := json.NewEncoder(ctx).Encode(response); err != nil {
-				ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-			}
+		ok := auth.Reauth()
+		if !ok {
+			competitiveUpdatesError(ctx)
+			return
+		}
+		redisSetAuth(redis, auth)
+		competitiveUpdates, err = pvp.GetCompetitiveUpdates(auth, fmt.Sprintf("%v", puuid), pvp.WithStartIndex(startIndex), pvp.WithEndIndex(endIndex))
+		if err != nil {
+			competitiveUpdatesError(ctx)
 			return
 		}
 	}
@@ -119,9 +73,23 @@ func CompetitiveUpdatesHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	ctx.Response.SetStatusCode(200)
 	response := &DefaultResponse{
 		Status: 200,
-		Data: competitiveUpdates,
+		Data:   competitiveUpdates,
 	}
 	if err := json.NewEncoder(ctx).Encode(response); err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
+}
+
+func competitiveUpdatesError(ctx *fasthttp.RequestCtx) {
+	ctx.Response.SetStatusCode(401)
+	response := &DefaultResponse{
+		Status: 401,
+		Data: &MessageData{
+			Message: "Cannot get valorant competitive updates.",
+		},
+	}
+	if err := json.NewEncoder(ctx).Encode(response); err != nil {
+		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+	}
+	return
 }

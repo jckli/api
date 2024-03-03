@@ -3,6 +3,7 @@ package valorant
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jckli/valorant.go/pvp"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 )
@@ -13,21 +14,10 @@ func MmrFetchPlayerHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	puuid := ctx.UserValue("puuid")
 
 	auth, err := redisGetAuth(redis)
-	if err != nil {
-		ctx.Response.SetStatusCode(401)
-		response := &DefaultResponse{
-			Status: 401,
-			Data: &MessageData{
-				Message: "Cannot access Redis Database.",
-			},
-		}
-		if err := json.NewEncoder(ctx).Encode(response); err != nil {
-			ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-		}
-		return
-	}
-	if auth == nil {
+	if auth == nil || err != nil {
 		authData, err := getAuth()
+		fmt.Println(authData)
+		fmt.Println(err)
 		if err != nil {
 			ctx.Response.SetStatusCode(401)
 			response := &DefaultResponse{
@@ -44,51 +34,18 @@ func MmrFetchPlayerHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		redisSetAuth(redis, authData)
 		auth = authData
 	}
-	
 
-	mmr, err := getMmr(auth, fmt.Sprintf("%v", puuid))
+	mmr, err := pvp.GetPlayerMmr(auth, fmt.Sprintf("%v", puuid))
 	if err != nil {
-		if err.Error() == "bad_claims" {
-			reauth, err := getAuth()
-			if err != nil {
-				ctx.Response.SetStatusCode(401)
-				response := &DefaultResponse{
-					Status: 401,
-					Data: &MessageData{
-						Message: "Cannot get valorant authentication.",
-					},
-				}
-				if err := json.NewEncoder(ctx).Encode(response); err != nil {
-					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-				}
-				return
-			}
-			redisSetAuth(redis, reauth)
-			mmr, err = getMmr(reauth, fmt.Sprintf("%v", puuid))
-			if err != nil {
-				ctx.Response.SetStatusCode(401)
-				response := &DefaultResponse{
-					Status: 401,
-					Data: &MessageData{
-						Message: "Cannot get valorant mmr.",
-					},
-				}
-				if err := json.NewEncoder(ctx).Encode(response); err != nil {
-					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-				}
-				return
-			}
-		} else {
-			ctx.Response.SetStatusCode(401)
-			response := &DefaultResponse{
-				Status: 401,
-				Data: &MessageData{
-					Message: "Cannot get valorant mmr.",
-				},
-			}
-			if err := json.NewEncoder(ctx).Encode(response); err != nil {
-				ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-			}
+		ok := auth.Reauth()
+		if !ok {
+			fetchPlayerMmrError(ctx)
+			return
+		}
+		redisSetAuth(redis, auth)
+		mmr, err = pvp.GetPlayerMmr(auth, fmt.Sprintf("%v", puuid))
+		if err != nil {
+			fetchPlayerMmrError(ctx)
 			return
 		}
 	}
@@ -108,9 +65,23 @@ func MmrFetchPlayerHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	ctx.Response.SetStatusCode(200)
 	response := &DefaultResponse{
 		Status: 200,
-		Data: mmr,
+		Data:   mmr,
 	}
 	if err := json.NewEncoder(ctx).Encode(response); err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
+}
+
+func fetchPlayerMmrError(ctx *fasthttp.RequestCtx) {
+	ctx.Response.SetStatusCode(401)
+	response := &DefaultResponse{
+		Status: 401,
+		Data: &MessageData{
+			Message: "Cannot get valorant player mmr.",
+		},
+	}
+	if err := json.NewEncoder(ctx).Encode(response); err != nil {
+		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+	}
+	return
 }
