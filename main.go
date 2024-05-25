@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/fasthttp/router"
-	"github.com/jckli/api/src/routes"
-	"github.com/jckli/api/src/utils"
+	"github.com/jckli/api/routes"
+	"github.com/jckli/api/utils"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/valyala/fasthttp"
 	"log"
@@ -13,6 +13,31 @@ import (
 
 func main() {
 	fmt.Println("Starting API...")
+	if os.Getenv("REDIS_URL") == "" {
+		panic("REDIS_URL not set")
+	}
+	if os.Getenv("REDIS_USERNAME") == "" {
+		panic("REDIS_USERNAME not set")
+	}
+	if os.Getenv("REDIS_PASSWORD") == "" {
+		panic("REDIS_PASSWORD not set")
+	}
+	if os.Getenv("SPOTIFY_CLIENT_ID") == "" {
+		panic("SPOTIFY_CLIENT_ID not set")
+	}
+	if os.Getenv("SPOTIFY_CLIENT_SECRET") == "" {
+		panic("SPOTIFY_CLIENT_SECRET not set")
+	}
+	if os.Getenv("SPOTIFY_REFRESH_TOKEN") == "" {
+		panic("SPOTIFY_REFRESH_TOKEN not set")
+	}
+	if os.Getenv("VALORANT_USERNAME") == "" {
+		panic("VALORANT_USERNAME not set")
+	}
+	if os.Getenv("VALORANT_PASSWORD") == "" {
+		panic("VALORANT_PASSWORD not set")
+	}
+
 	redis := utils.InitRedis()
 	defer redis.Close()
 	fmt.Println("Redis connected")

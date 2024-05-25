@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/fasthttp/router"
-	"github.com/jckli/api/src/handlers/index"
-	"github.com/jckli/api/src/handlers/spotify"
-	"github.com/jckli/api/src/handlers/valorant"
+	"github.com/jckli/api/handlers/index"
+	"github.com/jckli/api/handlers/spotify"
+	"github.com/jckli/api/handlers/valorant"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 )

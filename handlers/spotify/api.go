@@ -1,15 +1,15 @@
 package spotify
 
 import (
-	"github.com/valyala/fasthttp"
-	"os"
-	"fmt"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"github.com/valyala/fasthttp"
 	"net/url"
+	"os"
 )
 
-func getSpotifyToken() (*SpotifyRefreshResponse, error)  {
+func getSpotifyToken() (*SpotifyRefreshResponse, error) {
 	urls := "https://accounts.spotify.com/api/token"
 	data := url.Values{}
 	data.Set("refresh_token", os.Getenv("SPOTIFY_REFRESH_TOKEN"))
@@ -19,7 +19,7 @@ func getSpotifyToken() (*SpotifyRefreshResponse, error)  {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	respBody := &SpotifyRefreshResponse{}
 	if err = json.Unmarshal(resp, respBody); err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -30,7 +30,10 @@ func getSpotifyToken() (*SpotifyRefreshResponse, error)  {
 }
 
 func getTopArtists(access_token, time_range string, limit int) (*SpotifyTopArtistsResponse, error) {
-	urls := "https://api.spotify.com/v1/me/top/artists" + "?time_range=" + time_range + "&limit=" + fmt.Sprintf("%v", limit)
+	urls := "https://api.spotify.com/v1/me/top/artists" + "?time_range=" + time_range + "&limit=" + fmt.Sprintf(
+		"%v",
+		limit,
+	)
 	resp, err := getRequest(urls, access_token)
 	if err != nil {
 		return nil, err
@@ -38,7 +41,7 @@ func getTopArtists(access_token, time_range string, limit int) (*SpotifyTopArtis
 	if resp == nil {
 		return nil, nil
 	}
-	
+
 	respBody := &SpotifyTopArtistsResponse{}
 	if err = json.Unmarshal(resp, respBody); err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -49,7 +52,10 @@ func getTopArtists(access_token, time_range string, limit int) (*SpotifyTopArtis
 }
 
 func getTopTracks(access_token, time_range string, limit int) (*SpotifyTopTracksResponse, error) {
-	urls := "https://api.spotify.com/v1/me/top/tracks" + "?time_range=" + time_range + "&limit=" + fmt.Sprintf("%v", limit)
+	urls := "https://api.spotify.com/v1/me/top/tracks" + "?time_range=" + time_range + "&limit=" + fmt.Sprintf(
+		"%v",
+		limit,
+	)
 	resp, err := getRequest(urls, access_token)
 	if err != nil {
 		return nil, err
@@ -57,7 +63,7 @@ func getTopTracks(access_token, time_range string, limit int) (*SpotifyTopTracks
 	if resp == nil {
 		return nil, nil
 	}
-	
+
 	respBody := &SpotifyTopTracksResponse{}
 	if err = json.Unmarshal(resp, respBody); err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -101,7 +107,7 @@ func getRecentlyPlayed(access_token string, limit int) (*SpotifyRecentlyPlayedRe
 		fmt.Printf("Error: %v\n", err)
 		return nil, err
 	}
-	
+
 	return respBody, nil
 }
 
@@ -112,16 +118,13 @@ func getRequest(url, access_token string) ([]byte, error) {
 
 	req.SetRequestURI(url)
 	req.Header.SetMethod("GET")
-	req.Header.Set("Authorization", "Bearer "+ access_token)
+	req.Header.Set("Authorization", "Bearer "+access_token)
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
 	if err := client.Do(req, resp); err != nil {
 		return nil, err
-	}
-	if resp.StatusCode() == 401 || resp.StatusCode() == 403 {
-		return nil, fmt.Errorf("Unauthorized")
 	}
 
 	return resp.Body(), nil
@@ -139,9 +142,9 @@ func postRequest(url string, body []byte) ([]byte, error) {
 	auth := base64.StdEncoding.EncodeToString([]byte(client_id + ":" + client_secret))
 	req.Header.SetMethod("POST")
 	req.Header.Set("Authorization", "Basic "+auth)
-    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-    req.Header.Set("Accept", "application/json")
-    req.SetBody(body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+	req.SetBody(body)
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
@@ -155,3 +158,4 @@ func postRequest(url string, body []byte) ([]byte, error) {
 
 	return resp.Body(), nil
 }
+
