@@ -2,8 +2,8 @@ package spotify
 
 import (
 	"encoding/json"
-	"github.com/valyala/fasthttp"
 	"github.com/rueian/rueidis"
+	"github.com/valyala/fasthttp"
 )
 
 func IndexHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
@@ -19,3 +19,4 @@ func IndexHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
 }
+

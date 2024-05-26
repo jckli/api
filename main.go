@@ -16,12 +16,6 @@ func main() {
 	if os.Getenv("REDIS_URL") == "" {
 		panic("REDIS_URL not set")
 	}
-	if os.Getenv("REDIS_USERNAME") == "" {
-		panic("REDIS_USERNAME not set")
-	}
-	if os.Getenv("REDIS_PASSWORD") == "" {
-		panic("REDIS_PASSWORD not set")
-	}
 	if os.Getenv("SPOTIFY_CLIENT_ID") == "" {
 		panic("SPOTIFY_CLIENT_ID not set")
 	}

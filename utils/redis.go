@@ -1,19 +1,26 @@
 package utils
 
 import (
-	"github.com/rueian/rueidis"
+	"context"
 	"os"
+
+	"github.com/rueian/rueidis"
 )
 
 func InitRedis() rueidis.Client {
 	client, err := rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{os.Getenv("REDIS_URL")},
-		DisableCache: true,
-		Username: os.Getenv("REDIS_USERNAME"),
-		Password: os.Getenv("REDIS_PASSWORD"),
 	})
 	if err != nil {
 		panic(err)
 	}
+	redis_ctx := context.Background()
+
+	_, err = client.Do(redis_ctx, client.B().Get().Key("spotify_access_token").Build()).ToString()
+	if err != nil {
+		client.Do(redis_ctx, client.B().Set().Key("spotify_access_token").Value("").Build()).Error()
+	}
+
 	return client
 }
+
