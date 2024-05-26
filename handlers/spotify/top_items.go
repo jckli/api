@@ -3,9 +3,10 @@ package spotify
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
-	"strconv"
 )
 
 func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
@@ -66,7 +67,7 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		top_items, err = getTopTracks(access_token, timeRange, limit)
 	}
 	switch items := top_items.(type) {
-	case SpotifyTopArtistsResponse:
+	case *SpotifyTopArtistsResponse:
 		if items.Error.Status == 401 {
 			refresh_data, err := getSpotifyToken()
 			if err != nil {
@@ -100,7 +101,7 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 				return
 			}
 		}
-	case SpotifyTopTracksResponse:
+	case *SpotifyTopTracksResponse:
 		if items.Error.Status == 401 {
 			refresh_data, err := getSpotifyToken()
 			if err != nil {
