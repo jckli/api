@@ -54,7 +54,7 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	}
 
 	recently_played, err := getRecentlyPlayed(access_token, limit)
-	if err != nil {
+	if recently_played.Error.Status == 401 {
 		refresh_data, err := getSpotifyToken()
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
@@ -109,4 +109,3 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
 }
-

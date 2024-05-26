@@ -152,10 +152,6 @@ func postRequest(url string, body []byte) ([]byte, error) {
 	if err := client.Do(req, resp); err != nil {
 		return nil, err
 	}
-	if resp.StatusCode() == 401 {
-		return nil, fmt.Errorf("Unauthorized")
-	}
 
 	return resp.Body(), nil
 }
-

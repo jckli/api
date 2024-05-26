@@ -65,41 +65,74 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	} else if item_type == "tracks" {
 		top_items, err = getTopTracks(access_token, timeRange, limit)
 	}
-	if err != nil {
-		refresh_data, err := getSpotifyToken()
-		if err != nil {
-			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
-				Status: 500,
-				Data: &MessageData{
-					Message: err.Error(),
-				},
+	switch items := top_items.(type) {
+	case SpotifyTopArtistsResponse:
+		if items.Error.Status == 401 {
+			refresh_data, err := getSpotifyToken()
+			if err != nil {
+				ctx.Response.SetStatusCode(500)
+				response := &DefaultResponse{
+					Status: 500,
+					Data: &MessageData{
+						Message: err.Error(),
+					},
+				}
+				if err := json.NewEncoder(ctx).Encode(response); err != nil {
+					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+				}
+				return
 			}
-			if err := json.NewEncoder(ctx).Encode(response); err != nil {
-				ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-			}
-			return
-		}
-		redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Build()).
-			Error()
-		access_token = refresh_data.AccessToken
-		if item_type == "artists" {
+			redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Build()).
+				Error()
+			access_token = refresh_data.AccessToken
 			top_items, err = getTopArtists(access_token, timeRange, limit)
-		} else if item_type == "tracks" {
-			top_items, err = getTopTracks(access_token, timeRange, limit)
+			if err != nil {
+				ctx.Response.SetStatusCode(500)
+				response := &DefaultResponse{
+					Status: 500,
+					Data: &MessageData{
+						Message: err.Error(),
+					},
+				}
+				if err := json.NewEncoder(ctx).Encode(response); err != nil {
+					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+				}
+				return
+			}
 		}
-		if err != nil {
-			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
-				Status: 500,
-				Data: &MessageData{
-					Message: err.Error(),
-				},
+	case SpotifyTopTracksResponse:
+		if items.Error.Status == 401 {
+			refresh_data, err := getSpotifyToken()
+			if err != nil {
+				ctx.Response.SetStatusCode(500)
+				response := &DefaultResponse{
+					Status: 500,
+					Data: &MessageData{
+						Message: err.Error(),
+					},
+				}
+				if err := json.NewEncoder(ctx).Encode(response); err != nil {
+					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+				}
+				return
 			}
-			if err := json.NewEncoder(ctx).Encode(response); err != nil {
-				ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+			redis.Do(redis_ctx, redis.B().Set().Key("spotify_access_token").Value(refresh_data.AccessToken).Build()).
+				Error()
+			access_token = refresh_data.AccessToken
+			top_items, err = getTopTracks(access_token, timeRange, limit)
+			if err != nil {
+				ctx.Response.SetStatusCode(500)
+				response := &DefaultResponse{
+					Status: 500,
+					Data: &MessageData{
+						Message: err.Error(),
+					},
+				}
+				if err := json.NewEncoder(ctx).Encode(response); err != nil {
+					ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+				}
+				return
 			}
-			return
 		}
 	}
 	if top_items == nil {
@@ -124,4 +157,3 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
 }
-

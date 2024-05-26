@@ -3,6 +3,7 @@ package spotify
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 )
@@ -50,7 +51,8 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	}
 
 	currently_playing, err := getCurrentlyPlaying(access_token, market)
-	if err != nil {
+
+	if currently_playing.Error.Status == 401 {
 		refresh_data, err := getSpotifyToken()
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
@@ -105,4 +107,3 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
 }
-
