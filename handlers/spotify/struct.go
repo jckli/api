@@ -16,19 +16,6 @@ type SpotifyRefreshResponse struct {
 	Scope       string `json:"scope"`
 }
 
-type SpotifyTopItemsResponse struct {
-	Href     string `json:"href"`
-	Limit    int    `json:"limit"`
-	Next     string `json:"next"`
-	Offset   int    `json:"offset"`
-	Previous string `json:"previous"`
-	Total    int    `json:"total"`
-	Error    struct {
-		Status  int    `json:"status"`
-		Message string `json:"message"`
-	} `json:"error"`
-}
-
 type SpotifyTopTracksResponse struct {
 	Href     string         `json:"href"`
 	Limit    int            `json:"limit"`
