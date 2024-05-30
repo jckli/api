@@ -13,6 +13,11 @@ func FolderItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client, client *
 	ctx.Response.Header.SetCanonical([]byte("Content-Type"), []byte("application/json"))
 	folderId := ctx.UserValue("folderId").(string)
 
+	// scuffed security system lmao only one folder needs to be reached for my website
+	if folderId != "01NV5GJPTEVQP3Z732KJF2EWCKNROO7U7R" {
+		folderId = "gg"
+	}
+
 	folderItems, err := getFolderItems(redis, client, folderId)
 	if err != nil {
 		ctx.Response.SetStatusCode(500)

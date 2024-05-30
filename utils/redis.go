@@ -26,15 +26,25 @@ func InitRedis() rueidis.Client {
 
 func GetOnedriveRedisTokens(redis rueidis.Client) (*OnedriveTokens, error) {
 	redis_ctx := context.Background()
+
 	refreshToken, err := redis.Do(redis_ctx, redis.B().Get().Key("onedrive_refresh_token").Build()).
 		ToString()
 	if err != nil {
-		return nil, err
+		if err == rueidis.Nil {
+			refreshToken = ""
+		} else {
+			return nil, err
+		}
 	}
+
 	accessToken, err := redis.Do(redis_ctx, redis.B().Get().Key("onedrive_access_token").Build()).
 		ToString()
 	if err != nil {
-		return nil, err
+		if err == rueidis.Nil {
+			accessToken = ""
+		} else {
+			return nil, err
+		}
 	}
 
 	return &OnedriveTokens{
