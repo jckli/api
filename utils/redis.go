@@ -24,3 +24,42 @@ func InitRedis() rueidis.Client {
 	return client
 }
 
+func GetOnedriveRedisTokens(redis rueidis.Client) (*OnedriveTokens, error) {
+	redis_ctx := context.Background()
+	refreshToken, err := redis.Do(redis_ctx, redis.B().Get().Key("onedrive_refresh_token").Build()).
+		ToString()
+	if err != nil {
+		return nil, err
+	}
+	accessToken, err := redis.Do(redis_ctx, redis.B().Get().Key("onedrive_access_token").Build()).
+		ToString()
+	if err != nil {
+		return nil, err
+	}
+
+	return &OnedriveTokens{
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+	}, nil
+}
+
+func SetOnedriveRedisTokens(redis rueidis.Client, tokens *OnedriveTokens) error {
+	redis_ctx := context.Background()
+	err := redis.Do(redis_ctx, redis.B().Set().Key("onedrive_refresh_token").Value(tokens.RefreshToken).Build()).
+		Error()
+	if err != nil {
+		return err
+	}
+	err = redis.Do(redis_ctx, redis.B().Set().Key("onedrive_access_token").Value(tokens.AccessToken).Build()).
+		Error()
+	if err != nil {
+		return err
+	}
+	err = redis.Do(redis_ctx, redis.B().Expire().Key("onedrive_access_token").Seconds(tokens.AccessTokenExpiry).Build()).
+		Error()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

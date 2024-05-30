@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/jckli/api/utils"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 )
@@ -18,9 +19,9 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ToString()
 	if err != nil {
 		ctx.Response.SetStatusCode(404)
-		response := &DefaultResponse{
+		response := &utils.DefaultResponse{
 			Status: 404,
-			Data: &MessageData{
+			Data: &utils.MessageData{
 				Message: "Cannot access Redis Database.",
 			},
 		}
@@ -34,9 +35,9 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		refresh_data, err := getSpotifyToken()
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
+			response := &utils.DefaultResponse{
 				Status: 500,
-				Data: &MessageData{
+				Data: &utils.MessageData{
 					Message: err.Error(),
 				},
 			}
@@ -56,9 +57,9 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		refresh_data, err := getSpotifyToken()
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
+			response := &utils.DefaultResponse{
 				Status: 500,
-				Data: &MessageData{
+				Data: &utils.MessageData{
 					Message: err.Error(),
 				},
 			}
@@ -73,9 +74,9 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		currently_playing, err = getCurrentlyPlaying(access_token, market)
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
+			response := &utils.DefaultResponse{
 				Status: 500,
-				Data: &MessageData{
+				Data: &utils.MessageData{
 					Message: err.Error(),
 				},
 			}
@@ -87,9 +88,9 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	}
 	if currently_playing == nil {
 		ctx.Response.SetStatusCode(404)
-		response := &DefaultResponse{
+		response := &utils.DefaultResponse{
 			Status: 404,
-			Data: &MessageData{
+			Data: &utils.MessageData{
 				Message: "No data.",
 			},
 		}
@@ -99,7 +100,7 @@ func CurrentlyPlayingHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		return
 	}
 	ctx.Response.SetStatusCode(200)
-	response := &DefaultResponse{
+	response := &utils.DefaultResponse{
 		Status: 200,
 		Data:   currently_playing,
 	}

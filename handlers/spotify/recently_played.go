@@ -3,6 +3,7 @@ package spotify
 import (
 	"context"
 	"encoding/json"
+	"github.com/jckli/api/utils"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 	"strconv"
@@ -22,9 +23,9 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ToString()
 	if err != nil {
 		ctx.Response.SetStatusCode(404)
-		response := &DefaultResponse{
+		response := &utils.DefaultResponse{
 			Status: 404,
-			Data: &MessageData{
+			Data: &utils.MessageData{
 				Message: "Cannot access Redis Database.",
 			},
 		}
@@ -37,9 +38,9 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		refresh_data, err := getSpotifyToken()
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
+			response := &utils.DefaultResponse{
 				Status: 500,
-				Data: &MessageData{
+				Data: &utils.MessageData{
 					Message: err.Error(),
 				},
 			}
@@ -58,9 +59,9 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		refresh_data, err := getSpotifyToken()
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
+			response := &utils.DefaultResponse{
 				Status: 500,
-				Data: &MessageData{
+				Data: &utils.MessageData{
 					Message: err.Error(),
 				},
 			}
@@ -75,9 +76,9 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		recently_played, err = getRecentlyPlayed(access_token, limit)
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
+			response := &utils.DefaultResponse{
 				Status: 500,
-				Data: &MessageData{
+				Data: &utils.MessageData{
 					Message: err.Error(),
 				},
 			}
@@ -89,9 +90,9 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	}
 	if recently_played == nil {
 		ctx.Response.SetStatusCode(404)
-		response := &DefaultResponse{
+		response := &utils.DefaultResponse{
 			Status: 404,
-			Data: &MessageData{
+			Data: &utils.MessageData{
 				Message: "No data.",
 			},
 		}
@@ -101,7 +102,7 @@ func RecentlyPlayedHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		return
 	}
 	ctx.Response.SetStatusCode(200)
-	response := &DefaultResponse{
+	response := &utils.DefaultResponse{
 		Status: 200,
 		Data:   recently_played,
 	}

@@ -1,14 +1,5 @@
 package spotify
 
-type DefaultResponse struct {
-	Status int         `json:"status"`
-	Data   interface{} `json:"data"`
-}
-
-type MessageData struct {
-	Message string `json:"message"`
-}
-
 type SpotifyRefreshResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -228,4 +219,3 @@ type SpotifyRecentlyPlayedItem struct {
 		Uri  string `json:"uri"`
 	} `json:"context"`
 }
-

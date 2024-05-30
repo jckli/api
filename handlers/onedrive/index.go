@@ -1,4 +1,4 @@
-package spotify
+package onedrive
 
 import (
 	"encoding/json"
@@ -7,13 +7,13 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func IndexHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
+func IndexHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client, client *fasthttp.Client) {
 	ctx.Response.Header.SetCanonical([]byte("Content-Type"), []byte("application/json"))
 	ctx.Response.SetStatusCode(200)
 	response := &utils.DefaultResponse{
 		Status: 200,
 		Data: &utils.MessageData{
-			Message: "jckli api v1 - spotify endpoint",
+			Message: "jckli api v1 - onedrive endpoint",
 		},
 	}
 	if err := json.NewEncoder(ctx).Encode(response); err != nil {

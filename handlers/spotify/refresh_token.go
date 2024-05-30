@@ -2,8 +2,9 @@ package spotify
 
 import (
 	"encoding/json"
-	"github.com/valyala/fasthttp"
+	"github.com/jckli/api/utils"
 	"github.com/rueian/rueidis"
+	"github.com/valyala/fasthttp"
 )
 
 func RefreshTokenHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
@@ -11,9 +12,9 @@ func RefreshTokenHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	access_token, err := getSpotifyToken()
 	if err != nil {
 		ctx.Response.SetStatusCode(401)
-		response := &DefaultResponse{
+		response := &utils.DefaultResponse{
 			Status: 401,
-			Data: &MessageData{
+			Data: &utils.MessageData{
 				Message: "No access.",
 			},
 		}
@@ -23,11 +24,12 @@ func RefreshTokenHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		return
 	}
 	ctx.Response.SetStatusCode(200)
-	response := &DefaultResponse{
+	response := &utils.DefaultResponse{
 		Status: 200,
-		Data: access_token,
+		Data:   access_token,
 	}
 	if err := json.NewEncoder(ctx).Encode(response); err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
 }
+

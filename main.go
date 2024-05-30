@@ -31,13 +31,24 @@ func main() {
 	if os.Getenv("VALORANT_PASSWORD") == "" {
 		panic("VALORANT_PASSWORD not set")
 	}
+	if os.Getenv("ONEDRIVE_CLIENT_ID") == "" {
+		panic("ONEDRIVE_CLIENT_ID not set")
+	}
+	if os.Getenv("ONEDRIVE_CLIENT_SECRET") == "" {
+		panic("ONEDRIVE_CLIENT_SECRET not set")
+	}
+	if os.Getenv("ONEDRIVE_REFRESH_TOKEN") == "" {
+		panic("ONEDRIVE_REFRESH_TOKEN not set")
+	}
 
 	redis := utils.InitRedis()
 	defer redis.Close()
 	fmt.Println("Redis connected")
 
+	client := &fasthttp.Client{}
+
 	r := router.New()
-	routes.InitRoutes(r, redis)
+	routes.InitRoutes(r, redis, client)
 
 	port := os.Getenv("PORT")
 	fmt.Println("API on port: " + port)

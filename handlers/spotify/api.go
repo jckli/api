@@ -9,6 +9,7 @@ import (
 	"os"
 )
 
+// TODO: set expiry
 func getSpotifyToken() (*SpotifyRefreshResponse, error) {
 	urls := "https://accounts.spotify.com/api/token"
 	data := url.Values{}

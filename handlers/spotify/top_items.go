@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/jckli/api/utils"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 )
@@ -29,9 +30,9 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ToString()
 	if err != nil {
 		ctx.Response.SetStatusCode(404)
-		response := &DefaultResponse{
+		response := &utils.DefaultResponse{
 			Status: 404,
-			Data: &MessageData{
+			Data: &utils.MessageData{
 				Message: "Cannot access Redis Database.",
 			},
 		}
@@ -44,9 +45,9 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		refresh_data, err := getSpotifyToken()
 		if err != nil {
 			ctx.Response.SetStatusCode(500)
-			response := &DefaultResponse{
+			response := &utils.DefaultResponse{
 				Status: 500,
-				Data: &MessageData{
+				Data: &utils.MessageData{
 					Message: err.Error(),
 				},
 			}
@@ -72,9 +73,9 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 			refresh_data, err := getSpotifyToken()
 			if err != nil {
 				ctx.Response.SetStatusCode(500)
-				response := &DefaultResponse{
+				response := &utils.DefaultResponse{
 					Status: 500,
-					Data: &MessageData{
+					Data: &utils.MessageData{
 						Message: err.Error(),
 					},
 				}
@@ -89,9 +90,9 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 			top_items, err = getTopArtists(access_token, timeRange, limit)
 			if err != nil {
 				ctx.Response.SetStatusCode(500)
-				response := &DefaultResponse{
+				response := &utils.DefaultResponse{
 					Status: 500,
-					Data: &MessageData{
+					Data: &utils.MessageData{
 						Message: err.Error(),
 					},
 				}
@@ -106,9 +107,9 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 			refresh_data, err := getSpotifyToken()
 			if err != nil {
 				ctx.Response.SetStatusCode(500)
-				response := &DefaultResponse{
+				response := &utils.DefaultResponse{
 					Status: 500,
-					Data: &MessageData{
+					Data: &utils.MessageData{
 						Message: err.Error(),
 					},
 				}
@@ -123,9 +124,9 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 			top_items, err = getTopTracks(access_token, timeRange, limit)
 			if err != nil {
 				ctx.Response.SetStatusCode(500)
-				response := &DefaultResponse{
+				response := &utils.DefaultResponse{
 					Status: 500,
-					Data: &MessageData{
+					Data: &utils.MessageData{
 						Message: err.Error(),
 					},
 				}
@@ -138,9 +139,9 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 	}
 	if top_items == nil {
 		ctx.Response.SetStatusCode(404)
-		response := &DefaultResponse{
+		response := &utils.DefaultResponse{
 			Status: 404,
-			Data: &MessageData{
+			Data: &utils.MessageData{
 				Message: "No data.",
 			},
 		}
@@ -150,7 +151,7 @@ func TopItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		return
 	}
 	ctx.Response.SetStatusCode(200)
-	response := &DefaultResponse{
+	response := &utils.DefaultResponse{
 		Status: 200,
 		Data:   top_items,
 	}
