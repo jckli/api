@@ -85,7 +85,10 @@ func getFolderItems(
 		return nil, err
 	}
 
-	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/me/drive/items/%s/children", folderId)
+	url := fmt.Sprintf(
+		"https://graph.microsoft.com/v1.0/me/drive/items/%s/children?$expand=thumbnails",
+		folderId,
+	)
 
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)

@@ -20,5 +20,22 @@ type OnedriveItemsResponse struct {
 			Height int `json:"height"`
 			Width  int `json:"width"`
 		} `json:"image"`
+		Thumbnails []struct {
+			Small struct {
+				Url    string `json:"url"`
+				Height int    `json:"height"`
+				Width  int    `json:"width"`
+			} `json:"small"`
+			Medium struct {
+				Url    string `json:"url"`
+				Height int    `json:"height"`
+				Width  int    `json:"width"`
+			} `json:"medium"`
+			Large struct {
+				Url    string `json:"url"`
+				Height int    `json:"height"`
+				Width  int    `json:"width"`
+			} `json:"large"`
+		} `json:"thumbnails"`
 	} `json:"value"`
 }
