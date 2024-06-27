@@ -11,6 +11,10 @@ import (
 
 func FolderItemsHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client, client *fasthttp.Client) {
 	ctx.Response.Header.SetCanonical([]byte("Content-Type"), []byte("application/json"))
+
+	cacheControlValue := "public, max-age=2592000, immutable"
+	ctx.Response.Header.SetCanonical([]byte("Cache-Control"), []byte(cacheControlValue))
+
 	folderId := ctx.UserValue("folderId").(string)
 
 	// scuffed security system lmao only one folder needs to be reached for my website
