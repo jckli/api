@@ -6,7 +6,11 @@ import (
 	"github.com/jckli/api/utils"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
+	"log"
 	"os"
+	"sort"
+	"sync"
+	"time"
 )
 
 const (
@@ -70,7 +74,86 @@ func GetUserAnimeList(redis rueidis.Client, client *fasthttp.Client) (*MalAnimeL
 	}
 
 	return respData, nil
+}
 
+func GetUserUnifiedList(redis rueidis.Client, client *fasthttp.Client) (*MalUnifiedListResponse, error) {
+	var wg sync.WaitGroup
+	errChan := make(chan error, 2)
+	animeChan := make(chan *MalAnimeListResponse, 1)
+	mangaChan := make(chan *MalMangaListResponse, 1)
+
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		animeList, err := GetUserAnimeList(redis, client)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to get anime list: %w", err)
+			return
+		}
+		animeChan <- animeList
+	}()
+
+	go func() {
+		defer wg.Done()
+		mangaList, err := GetUserMangaList(redis, client)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to get manga list: %w", err)
+			return
+		}
+		mangaChan <- mangaList
+	}()
+
+	wg.Wait()
+	close(errChan)
+	close(animeChan)
+	close(mangaChan)
+
+	for err := range errChan {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	animeList := <-animeChan
+	mangaList := <-mangaChan
+
+	totalCapacity := len(animeList.Data) + len(mangaList.Data)
+	allUpdates := make([]MalUnifiedListEntry, 0, totalCapacity)
+
+	for _, entry := range animeList.Data {
+		updatedAt, err := time.Parse(time.RFC3339, entry.ListStatus.UpdatedAt)
+		if err != nil {
+			log.Printf("Warning: could not parse anime update time '%s': %v", entry.ListStatus.UpdatedAt, err)
+			continue
+		}
+		animeEntry := entry
+		allUpdates = append(allUpdates, MalUnifiedListEntry{
+			Type:       "anime",
+			UpdatedAt:  updatedAt,
+			AnimeEntry: &animeEntry,
+		})
+	}
+
+	for _, entry := range mangaList.Data {
+		updatedAt, err := time.Parse(time.RFC3339, entry.ListStatus.UpdatedAt)
+		if err != nil {
+			log.Printf("Warning: could not parse manga update time '%s': %v", entry.ListStatus.UpdatedAt, err)
+			continue
+		}
+		mangaEntry := entry
+		allUpdates = append(allUpdates, MalUnifiedListEntry{
+			Type:       "manga",
+			UpdatedAt:  updatedAt,
+			MangaEntry: &mangaEntry,
+		})
+	}
+
+	sort.Slice(allUpdates, func(i, j int) bool {
+		return allUpdates[i].UpdatedAt.After(allUpdates[j].UpdatedAt)
+	})
+
+	return &MalUnifiedListResponse{Data: allUpdates}, nil
 }
 
 func doMalRequest(req *fasthttp.Request, redis rueidis.Client, client *fasthttp.Client) (*fasthttp.Response, error) {

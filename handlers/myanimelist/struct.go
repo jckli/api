@@ -1,10 +1,23 @@
 package mal
 
+import "time"
+
 type MalTokenResponse struct {
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type MalUnifiedListResponse struct {
+	Data []MalUnifiedListEntry `json:"data"`
+}
+
+type MalUnifiedListEntry struct {
+	Type       string         `json:"type"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	AnimeEntry *MalAnimeEntry `json:"anime_entry,omitempty"`
+	MangaEntry *MalMangaEntry `json:"manga_entry,omitempty"`
 }
 
 type MalMangaListResponse struct {
