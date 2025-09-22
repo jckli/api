@@ -1,6 +1,6 @@
 module github.com/jckli/api
 
-go 1.21
+go 1.25
 
 require (
 	github.com/fasthttp/router v1.4.16
