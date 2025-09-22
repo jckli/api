@@ -40,6 +40,15 @@ func main() {
 	if os.Getenv("ONEDRIVE_REFRESH_TOKEN") == "" {
 		panic("ONEDRIVE_REFRESH_TOKEN not set")
 	}
+	if os.Getenv("MAL_REFRESH_TOKEN") == "" {
+		panic("MAL_REFRESH_TOKEN not set")
+	}
+	if os.Getenv("MAL_CLIENT_ID") == "" {
+		panic("MAL_CLIENT_ID not set")
+	}
+	if os.Getenv("MAL_CLIENT_SECRET") == "" {
+		panic("MAL_CLIENT_SECRET not set")
+	}
 
 	redis := utils.InitRedis()
 	defer redis.Close()

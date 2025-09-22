@@ -6,6 +6,7 @@ import (
 	"github.com/jckli/api/utils"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
+	"log"
 	"os"
 )
 
@@ -27,6 +28,7 @@ func doMalRequest(req *fasthttp.Request, redis rueidis.Client, client *fasthttp.
 		fasthttp.ReleaseResponse(resp)
 		return nil, fmt.Errorf("failed to execute initial request: %w", err)
 	}
+	log.Printf("Initial Request Raw Response: %s", string(resp.Body()))
 
 	if resp.StatusCode() == 401 {
 		fasthttp.ReleaseResponse(resp)
@@ -54,7 +56,7 @@ func doMalRequest(req *fasthttp.Request, redis rueidis.Client, client *fasthttp.
 
 func GetUserMangaList(redis rueidis.Client, client *fasthttp.Client) (*MalMangaListResponse, error) {
 	reqURL := fmt.Sprintf(
-		"%s/users/@me/mangalist?sort=list_updated_at&limit=10",
+		"%s/users/@me/mangalist?sort=list_updated_at&limit=10&fields=list_status",
 		apiBaseURL,
 	)
 
@@ -96,7 +98,9 @@ func getMalToken(redis rueidis.Client, client *fasthttp.Client) (string, error) 
 
 func refreshAccessToken(redis rueidis.Client, client *fasthttp.Client, refreshToken string) (string, error) {
 	if refreshToken == "" {
-		return "", fmt.Errorf("cannot refresh: MAL refresh token is missing")
+		if refreshToken = os.Getenv("MAL_REFRESH_TOKEN"); refreshToken == "" {
+			return "", fmt.Errorf("cannot refresh: MAL refresh token is missing")
+		}
 	}
 
 	req := fasthttp.AcquireRequest()
