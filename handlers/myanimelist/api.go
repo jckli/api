@@ -6,7 +6,6 @@ import (
 	"github.com/jckli/api/utils"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
-	"log"
 	"os"
 )
 
@@ -28,7 +27,6 @@ func doMalRequest(req *fasthttp.Request, redis rueidis.Client, client *fasthttp.
 		fasthttp.ReleaseResponse(resp)
 		return nil, fmt.Errorf("failed to execute initial request: %w", err)
 	}
-	log.Printf("Initial Request Raw Response: %s", string(resp.Body()))
 
 	if resp.StatusCode() == 401 {
 		fasthttp.ReleaseResponse(resp)
