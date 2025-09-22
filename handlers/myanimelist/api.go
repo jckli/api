@@ -14,6 +14,65 @@ const (
 	tokenURL   = "https://myanimelist.net/v1/oauth2/token"
 )
 
+func GetUserMangaList(redis rueidis.Client, client *fasthttp.Client) (*MalMangaListResponse, error) {
+	reqURL := fmt.Sprintf(
+		"%s/users/@me/mangalist?sort=list_updated_at&limit=10&fields=list_status",
+		apiBaseURL,
+	)
+
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	req.SetRequestURI(reqURL)
+	req.Header.SetMethod("GET")
+
+	resp, err := doMalRequest(req, redis, client)
+	if err != nil {
+		return nil, err
+	}
+	defer fasthttp.ReleaseResponse(resp)
+
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("unexpected status code from MAL API: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	respData := &MalMangaListResponse{}
+	if err := json.Unmarshal(resp.Body(), &respData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal manga list response: %w", err)
+	}
+
+	return respData, nil
+}
+
+func GetUserAnimeList(redis rueidis.Client, client *fasthttp.Client) (*MalAnimeListResponse, error) {
+	reqURL := fmt.Sprintf(
+		"%s/users/@me/animelist?sort=list_updated_at&limit=10&fields=list_status",
+		apiBaseURL,
+	)
+
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	req.SetRequestURI(reqURL)
+	req.Header.SetMethod("GET")
+
+	resp, err := doMalRequest(req, redis, client)
+	if err != nil {
+		return nil, err
+	}
+	defer fasthttp.ReleaseResponse(resp)
+
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("unexpected status code from MAL API: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	respData := &MalAnimeListResponse{}
+	if err := json.Unmarshal(resp.Body(), &respData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal anime list response: %w", err)
+	}
+
+	return respData, nil
+
+}
+
 func doMalRequest(req *fasthttp.Request, redis rueidis.Client, client *fasthttp.Client) (*fasthttp.Response, error) {
 	accessToken, err := getMalToken(redis, client)
 	if err != nil {
@@ -50,35 +109,6 @@ func doMalRequest(req *fasthttp.Request, redis rueidis.Client, client *fasthttp.
 	}
 
 	return resp, nil
-}
-
-func GetUserMangaList(redis rueidis.Client, client *fasthttp.Client) (*MalMangaListResponse, error) {
-	reqURL := fmt.Sprintf(
-		"%s/users/@me/mangalist?sort=list_updated_at&limit=10&fields=list_status",
-		apiBaseURL,
-	)
-
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-	req.SetRequestURI(reqURL)
-	req.Header.SetMethod("GET")
-
-	resp, err := doMalRequest(req, redis, client)
-	if err != nil {
-		return nil, err
-	}
-	defer fasthttp.ReleaseResponse(resp)
-
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("unexpected status code from MAL API: %d, body: %s", resp.StatusCode(), string(resp.Body()))
-	}
-
-	respData := &MalMangaListResponse{}
-	if err := json.Unmarshal(resp.Body(), &respData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal manga list response: %w", err)
-	}
-
-	return respData, nil
 }
 
 func getMalToken(redis rueidis.Client, client *fasthttp.Client) (string, error) {

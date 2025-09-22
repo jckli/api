@@ -59,4 +59,7 @@ func InitRoutes(r *router.Router, redis rueidis.Client, fc *fasthttp.Client) {
 	r.GET("/myanimelist/list/manga", func(ctx *fasthttp.RequestCtx) {
 		mal.MangaListHandler(ctx, redis, fc)
 	})
+	r.GET("/myanimelist/list/anime", func(ctx *fasthttp.RequestCtx) {
+		mal.AnimeListHandler(ctx, redis, fc)
+	})
 }

@@ -13,11 +13,21 @@ type MalMangaListResponse struct {
 }
 
 type MalMangaEntry struct {
-	Node       MalMangaNode       `json:"node"`
+	Node       MalNode            `json:"node"`
 	ListStatus MalMangaListStatus `json:"list_status"`
 }
 
-type MalMangaNode struct {
+type MalAnimeListResponse struct {
+	Data   []MalAnimeEntry `json:"data"`
+	Paging Paging          `json:"paging"`
+}
+
+type MalAnimeEntry struct {
+	Node       MalNode            `json:"node"`
+	ListStatus MalAnimeListStatus `json:"list_status"`
+}
+
+type MalNode struct {
 	ID          int            `json:"id"`
 	Title       string         `json:"title"`
 	MainPicture MalMainPicture `json:"main_picture"`
@@ -35,6 +45,14 @@ type MalMangaListStatus struct {
 	NumVolumesRead  int    `json:"num_volumes_read"`
 	IsRereading     bool   `json:"is_rereading"`
 	UpdatedAt       string `json:"updated_at"`
+}
+
+type MalAnimeListStatus struct {
+	Status             string `json:"status"`
+	Score              int    `json:"score"`
+	NumEpisodesWatched int    `json:"num_episodes_watched"`
+	IsRewatching       bool   `json:"is_rewatching"`
+	UpdatedAt          string `json:"updated_at"`
 }
 
 type MalAuthorEntry struct {
