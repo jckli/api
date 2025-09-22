@@ -14,3 +14,8 @@ type OnedriveTokens struct {
 	RefreshToken      string
 	AccessTokenExpiry int64
 }
+
+type MalTokens struct {
+	AccessToken  string
+	RefreshToken string
+}

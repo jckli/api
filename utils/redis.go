@@ -73,3 +73,46 @@ func SetOnedriveRedisTokens(redis rueidis.Client, tokens *OnedriveTokens) error 
 
 	return nil
 }
+
+func GetMalRedisTokens(redis rueidis.Client) (*MalTokens, error) {
+	ctx := context.Background()
+
+	refreshToken, err := redis.Do(ctx, redis.B().Get().Key("mal_refresh_token").Build()).ToString()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			refreshToken = ""
+		} else {
+			return nil, err
+		}
+	}
+
+	accessToken, err := redis.Do(ctx, redis.B().Get().Key("mal_access_token").Build()).ToString()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			accessToken = ""
+		} else {
+			return nil, err
+		}
+	}
+
+	return &MalTokens{
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+	}, nil
+}
+
+func SetMalRedisTokens(redis rueidis.Client, tokens *MalTokens) error {
+	ctx := context.Background()
+
+	cmds := make(rueidis.Commands, 0, 2)
+	cmds = append(cmds, redis.B().Set().Key("mal_access_token").Value(tokens.AccessToken).ExSeconds(3540).Build())
+	cmds = append(cmds, redis.B().Set().Key("mal_refresh_token").Value(tokens.RefreshToken).Build())
+
+	for _, resp := range redis.DoMulti(ctx, cmds...) {
+		if err := resp.Error(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

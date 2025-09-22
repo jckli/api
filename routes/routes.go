@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/fasthttp/router"
 	"github.com/jckli/api/handlers/index"
+	"github.com/jckli/api/handlers/myanimelist"
 	"github.com/jckli/api/handlers/onedrive"
 	"github.com/jckli/api/handlers/spotify"
 	"github.com/jckli/api/handlers/valorant"
@@ -43,6 +44,7 @@ func InitRoutes(r *router.Router, redis rueidis.Client, fc *fasthttp.Client) {
 		valorant.MatchDetailsHandler(ctx, redis)
 	})
 
+	// onedrive routes
 	r.GET("/onedrive", func(ctx *fasthttp.RequestCtx) {
 		onedrive.IndexHandler(ctx, redis, fc)
 	})
@@ -50,4 +52,11 @@ func InitRoutes(r *router.Router, redis rueidis.Client, fc *fasthttp.Client) {
 		onedrive.FolderItemsHandler(ctx, redis, fc)
 	})
 
+	// myanimelist routes
+	r.GET("/myanimelist", func(ctx *fasthttp.RequestCtx) {
+		mal.IndexHandler(ctx, redis, fc)
+	})
+	r.GET("/myanimelist/list/manga", func(ctx *fasthttp.RequestCtx) {
+		mal.MangaListHandler(ctx, redis, fc)
+	})
 }
