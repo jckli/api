@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jckli-api-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod" 
+spec:
+  tls: 
+  - hosts:
+    - api.jackli.dev
+    secretName: jckli-api-tls-secret
+  rules:
+  - host: "api.jackli.dev"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jckli-api-service
+            port:
+              number: 80

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jckli-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jckli-api
+  template:
+    metadata:
+      labels:
+        app: jckli-api
+    spec:
+      containers:
+      - name: jckli-api
+        image: jckli/jckli-api:latest         
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        envFrom:
+        - secretRef:
+            name: jckli-api-secrets 
