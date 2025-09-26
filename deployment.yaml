@@ -7,11 +7,15 @@ spec:
   selector:
     matchLabels:
       app: jckli-api
+      region: phx
   template:
     metadata:
       labels:
         app: jckli-api
+        region: phx
     spec:
+      nodeSelector:
+        region: phx
       containers:
       - name: jckli-api
         image: jckli/jckli-api:latest         
