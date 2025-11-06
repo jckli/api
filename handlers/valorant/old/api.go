@@ -1,4 +1,4 @@
-package valorant
+package valorant_old
 
 import (
 	"github.com/jckli/valorant.go"

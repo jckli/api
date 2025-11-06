@@ -6,7 +6,6 @@ import (
 	"github.com/jckli/api/handlers/myanimelist"
 	"github.com/jckli/api/handlers/onedrive"
 	"github.com/jckli/api/handlers/spotify"
-	"github.com/jckli/api/handlers/valorant"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 )
@@ -32,16 +31,12 @@ func InitRoutes(r *router.Router, redis rueidis.Client, fc *fasthttp.Client) {
 
 	// valorant routes
 	r.GET("/valorant", func(ctx *fasthttp.RequestCtx) {
-		valorant.IndexHandler(ctx, redis)
 	})
 	r.GET("/valorant/mmr/players/{puuid}", func(ctx *fasthttp.RequestCtx) {
-		valorant.MmrFetchPlayerHandler(ctx, redis)
 	})
 	r.GET("/valorant/mmr/players/{puuid}/competitive-updates", func(ctx *fasthttp.RequestCtx) {
-		valorant.CompetitiveUpdatesHandler(ctx, redis)
 	})
 	r.GET("/valorant/match-details/{matchid}", func(ctx *fasthttp.RequestCtx) {
-		valorant.MatchDetailsHandler(ctx, redis)
 	})
 
 	// onedrive routes

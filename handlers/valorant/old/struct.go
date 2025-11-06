@@ -1,4 +1,4 @@
-package valorant
+package valorant_old
 
 type DefaultResponse struct {
 	Status int         `json:"status"`

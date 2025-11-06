@@ -1,4 +1,4 @@
-package valorant
+package valorant_old
 
 import (
 	"encoding/json"
@@ -19,4 +19,3 @@ func IndexHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client) {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 	}
 }
-
