@@ -54,16 +54,22 @@ type MatchV4Player struct {
 	} `json:"agent"`
 	Stats MatchV4Stats `json:"stats"`
 	Tier  struct {
-		Id   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"tier"`
 }
 
 type MatchV4Stats struct {
-	Score   int `json:"score"`
-	Kills   int `json:"kills"`
-	Deaths  int `json:"deaths"`
-	Assists int `json:"assists"`
+	Score     int `json:"score"`
+	Kills     int `json:"kills"`
+	Deaths    int `json:"deaths"`
+	Assists   int `json:"assists"`
+	Headshots int `json:"headshots"`
+	Bodyshots int `json:"bodyshots"`
+	Legshots  int `json:"legshots"`
+	Damage    struct {
+		Dealt    int `json:"dealt"`
+		Received int `json:"received"`
+	} `json:"damage"`
 }
 
 type MatchV4Team struct {
@@ -73,4 +79,20 @@ type MatchV4Team struct {
 		Won  int `json:"won"`
 		Lost int `json:"lost"`
 	} `json:"rounds"`
+}
+
+type EnrichedMatch struct {
+	MatchV4Data
+	MyStats DerivedStats `json:"my_stats"`
+}
+
+type DerivedStats struct {
+	Result              string  `json:"result"`
+	Score               string  `json:"score"`
+	Agent               string  `json:"agent"`
+	KDA                 string  `json:"kda"`
+	RankInGame          string  `json:"rank_in_game"`
+	DamageDeltaPerRound float64 `json:"damage_delta_per_round"`
+	ACS                 float64 `json:"acs"`
+	HSPercent           float64 `json:"hs_percent"`
 }
