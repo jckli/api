@@ -6,6 +6,7 @@ import (
 	"github.com/jckli/api/handlers/myanimelist"
 	"github.com/jckli/api/handlers/onedrive"
 	"github.com/jckli/api/handlers/spotify"
+	"github.com/jckli/api/handlers/valorant"
 	"github.com/rueian/rueidis"
 	"github.com/valyala/fasthttp"
 )
@@ -29,14 +30,24 @@ func InitRoutes(r *router.Router, redis rueidis.Client, fc *fasthttp.Client) {
 		spotify.RecentlyPlayedHandler(ctx, redis)
 	})
 
+	/*
+		// old valorant routes
+		r.GET("/valorant", func(ctx *fasthttp.RequestCtx) {
+		})
+		r.GET("/valorant/mmr/players/{puuid}", func(ctx *fasthttp.RequestCtx) {
+		})
+		r.GET("/valorant/mmr/players/{puuid}/competitive-updates", func(ctx *fasthttp.RequestCtx) {
+		})
+		r.GET("/valorant/match-details/{matchid}", func(ctx *fasthttp.RequestCtx) {
+		})
+	*/
+
 	// valorant routes
-	r.GET("/valorant", func(ctx *fasthttp.RequestCtx) {
+	r.GET("/valorant/rank", func(ctx *fasthttp.RequestCtx) {
+		valorant.RankHandler(ctx, redis, fc)
 	})
-	r.GET("/valorant/mmr/players/{puuid}", func(ctx *fasthttp.RequestCtx) {
-	})
-	r.GET("/valorant/mmr/players/{puuid}/competitive-updates", func(ctx *fasthttp.RequestCtx) {
-	})
-	r.GET("/valorant/match-details/{matchid}", func(ctx *fasthttp.RequestCtx) {
+	r.GET("/valorant/matches", func(ctx *fasthttp.RequestCtx) {
+		valorant.MatchesHandler(ctx, redis, fc)
 	})
 
 	// onedrive routes

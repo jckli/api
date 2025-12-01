@@ -1,8 +1,8 @@
 package utils
 
 type DefaultResponse struct {
-	Status int         `json:"status"`
-	Data   interface{} `json:"data"`
+	Status int `json:"status"`
+	Data   any `json:"data"`
 }
 
 type MessageData struct {

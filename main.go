@@ -25,12 +25,6 @@ func main() {
 	if os.Getenv("SPOTIFY_REFRESH_TOKEN") == "" {
 		panic("SPOTIFY_REFRESH_TOKEN not set")
 	}
-	if os.Getenv("VALORANT_USERNAME") == "" {
-		panic("VALORANT_USERNAME not set")
-	}
-	if os.Getenv("VALORANT_PASSWORD") == "" {
-		panic("VALORANT_PASSWORD not set")
-	}
 	if os.Getenv("ONEDRIVE_CLIENT_ID") == "" {
 		panic("ONEDRIVE_CLIENT_ID not set")
 	}
