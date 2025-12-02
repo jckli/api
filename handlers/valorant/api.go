@@ -217,7 +217,7 @@ func calculateMyStats(match MatchV4Data, myPUUID string, redis rueidis.Client, c
 		KDA:                 fmt.Sprintf("%d/%d/%d", me.Stats.Kills, me.Stats.Deaths, me.Stats.Assists),
 		RankInGame:          me.Tier.Name,
 		DamageDeltaPerRound: float64(int(ddPerRound*10)) / 10,
-		ACS:                 float64(int(acs)),
+		ACS:                 float64(int(acs + 0.5)),
 		HSPercent:           float64(int(hsPercent*10)) / 10,
 	}
 }
