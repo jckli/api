@@ -18,8 +18,9 @@ type HendrikMMRv3Data struct {
 		RR  int `json:"rr"`
 		Elo int `json:"elo"`
 
-		RankIconURL string `json:"rank_icon_url"`
-		RankColor   string `json:"rank_color"`
+		RankIconURL         string `json:"rank_icon_url"`
+		RankColor           string `json:"rank_color"`
+		RankBackgroundColor string `json:"rank_background_color"`
 	} `json:"current"`
 }
 
@@ -105,9 +106,10 @@ type DerivedStats struct {
 type OfficialTiersResponse struct {
 	Data []struct {
 		Tiers []struct {
-			Tier      int    `json:"tier"`
-			LargeIcon string `json:"largeIcon"`
-			Color     string `json:"color"`
+			Tier            int    `json:"tier"`
+			LargeIcon       string `json:"largeIcon"`
+			Color           string `json:"color"`
+			BackgroundColor string `json:"backgroundColor"`
 		} `json:"tiers"`
 	} `json:"data"`
 }

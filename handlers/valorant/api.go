@@ -43,7 +43,7 @@ func GetAccountRankByPUUID(puuid string, redis rueidis.Client, client *fasthttp.
 		return nil, fmt.Errorf("failed to unmarshal rank response: %w", err)
 	}
 
-	icon, color, err := getCompetitiveTierVisuals(wrapper.Data.Current.Tier.ID, redis, client)
+	icon, color, bgColor, err := getCompetitiveTierVisuals(wrapper.Data.Current.Tier.ID, redis, client)
 	if err == nil {
 		wrapper.Data.Current.RankIconURL = icon
 		if color != "" {
@@ -51,8 +51,14 @@ func GetAccountRankByPUUID(puuid string, redis rueidis.Client, client *fasthttp.
 		} else {
 			wrapper.Data.Current.RankColor = "#ffffff"
 		}
+		if bgColor != "" {
+			wrapper.Data.Current.RankBackgroundColor = "#" + bgColor
+		} else {
+			wrapper.Data.Current.RankBackgroundColor = "#000000"
+		}
 	} else {
 		wrapper.Data.Current.RankColor = "#ffffff"
+		wrapper.Data.Current.RankBackgroundColor = "#000000"
 	}
 
 	return &wrapper.Data, nil
@@ -222,7 +228,7 @@ func calculateMyStats(match MatchV4Data, myPUUID string, redis rueidis.Client, c
 	}
 }
 
-func getCompetitiveTierVisuals(tierID int, redis rueidis.Client, client *fasthttp.Client) (string, string, error) {
+func getCompetitiveTierVisuals(tierID int, redis rueidis.Client, client *fasthttp.Client) (string, string, string, error) {
 	var tiersResp OfficialTiersResponse
 
 	cached, err := utils.GetValorantTiersCache(redis)
@@ -241,11 +247,11 @@ func getCompetitiveTierVisuals(tierID int, redis rueidis.Client, client *fasthtt
 	defer fasthttp.ReleaseResponse(resp)
 
 	if err := client.Do(req, resp); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	if err := json.Unmarshal(resp.Body(), &tiersResp); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	if err := utils.SetValorantTiersCache(redis, string(resp.Body())); err != nil {
@@ -255,7 +261,7 @@ func getCompetitiveTierVisuals(tierID int, redis rueidis.Client, client *fasthtt
 	return findTierInResponse(tiersResp, tierID)
 }
 
-func findTierInResponse(resp OfficialTiersResponse, tierID int) (string, string, error) {
+func findTierInResponse(resp OfficialTiersResponse, tierID int) (string, string, string, error) {
 	if len(resp.Data) > 0 {
 		latestEpisode := resp.Data[len(resp.Data)-1]
 		for _, tier := range latestEpisode.Tiers {
@@ -264,9 +270,13 @@ func findTierInResponse(resp OfficialTiersResponse, tierID int) (string, string,
 				if len(hex) == 8 {
 					hex = hex[:6]
 				}
-				return tier.LargeIcon, hex, nil
+				bgHex := tier.BackgroundColor
+				if len(bgHex) == 8 {
+					bgHex = bgHex[:6]
+				}
+				return tier.LargeIcon, hex, bgHex, nil
 			}
 		}
 	}
-	return "", "ffffff", fmt.Errorf("tier id %d not found", tierID)
+	return "", "ffffff", "000000", fmt.Errorf("tier id %d not found", tierID)
 }
