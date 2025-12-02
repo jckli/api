@@ -12,11 +12,14 @@ type HendrikMMRv3Data struct {
 	} `json:"account"`
 	Current struct {
 		Tier struct {
-			Id   int    `json:"id"`
+			ID   int    `json:"id"`
 			Name string `json:"name"`
 		} `json:"tier"`
 		RR  int `json:"rr"`
 		Elo int `json:"elo"`
+
+		RankIconURL string `json:"rank_icon_url"`
+		RankColor   string `json:"rank_color"`
 	} `json:"current"`
 }
 
@@ -50,6 +53,7 @@ type MatchV4Player struct {
 	Tag    string `json:"tag"`
 	TeamID string `json:"team_id"`
 	Agent  struct {
+		ID   string `json:"id"`
 		Name string `json:"name"`
 	} `json:"agent"`
 	Stats MatchV4Stats `json:"stats"`
@@ -90,9 +94,28 @@ type DerivedStats struct {
 	Result              string  `json:"result"`
 	Score               string  `json:"score"`
 	Agent               string  `json:"agent"`
+	AgentIconURL        string  `json:"agent_icon_url"`
 	KDA                 string  `json:"kda"`
 	RankInGame          string  `json:"rank_in_game"`
 	DamageDeltaPerRound float64 `json:"damage_delta_per_round"`
 	ACS                 float64 `json:"acs"`
 	HSPercent           float64 `json:"hs_percent"`
+}
+
+type OfficialTiersResponse struct {
+	Data []struct {
+		Tiers []struct {
+			Tier      int    `json:"tier"`
+			LargeIcon string `json:"largeIcon"`
+			Color     string `json:"color"`
+		} `json:"tiers"`
+	} `json:"data"`
+}
+
+type OfficialAgentsResponse struct {
+	Data []struct {
+		UUID        string `json:"uuid"`
+		DisplayName string `json:"displayName"`
+		DisplayIcon string `json:"displayIcon"`
+	} `json:"data"`
 }

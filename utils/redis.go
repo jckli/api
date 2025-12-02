@@ -116,3 +116,37 @@ func SetMalRedisTokens(redis rueidis.Client, tokens *MalTokens) error {
 
 	return nil
 }
+
+func GetValorantTiersCache(redis rueidis.Client) (string, error) {
+	ctx := context.Background()
+	val, err := redis.Do(ctx, redis.B().Get().Key("valorant_rank_tiers").Build()).ToString()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return val, nil
+}
+
+func SetValorantTiersCache(redis rueidis.Client, jsonData string) error {
+	ctx := context.Background()
+	return redis.Do(ctx, redis.B().Set().Key("valorant_rank_tiers").Value(jsonData).ExSeconds(86400).Build()).Error()
+}
+
+func GetValorantAgentsCache(redis rueidis.Client) (string, error) {
+	ctx := context.Background()
+	val, err := redis.Do(ctx, redis.B().Get().Key("valorant_agents").Build()).ToString()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return val, nil
+}
+
+func SetValorantAgentsCache(redis rueidis.Client, jsonData string) error {
+	ctx := context.Background()
+	return redis.Do(ctx, redis.B().Set().Key("valorant_agents").Value(jsonData).ExSeconds(86400).Build()).Error()
+}
