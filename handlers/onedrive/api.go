@@ -95,9 +95,11 @@ func getFolderItems(
 	req.SetRequestURI(url)
 	req.Header.SetMethod("GET")
 	req.Header.Set("Authorization", "Bearer "+access_token)
-	req.URI().
-		QueryArgs().
-		Set("select", "@microsoft.graph.downloadUrl,name,file,size,lastModifiedDateTime,image")
+	qa := req.URI().
+		QueryArgs()
+
+	qa.Set("select", "@microsoft.graph.downloadUrl,name,file,size,lastModifiedDateTime,image")
+	qa.Set("$orderby", "lastModifiedDateTime desc")
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
