@@ -49,11 +49,12 @@ type MatchV4Metadata struct {
 }
 
 type MatchV4Player struct {
-	PUUID  string `json:"puuid"`
-	Name   string `json:"name"`
-	Tag    string `json:"tag"`
-	TeamID string `json:"team_id"`
-	Agent  struct {
+	PUUID   string `json:"puuid"`
+	Name    string `json:"name"`
+	Tag     string `json:"tag"`
+	TeamID  string `json:"team_id"`
+	PartyID string `json:"party_id"`
+	Agent   struct {
 		ID   string `json:"id"`
 		Name string `json:"name"`
 	} `json:"agent"`
