@@ -13,7 +13,12 @@ import (
 func MatchesHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client, client *fasthttp.Client) {
 	ctx.Response.Header.SetCanonical([]byte("Content-Type"), []byte("application/json"))
 
-	puuid := os.Getenv("VALORANT_PUUID")
+	var puuid string
+	if p := ctx.UserValue("puuid"); p != nil {
+		puuid = p.(string)
+	} else {
+		puuid = os.Getenv("VALORANT_PUUID")
+	}
 	if puuid == "" {
 		err := fmt.Errorf("VALORANT_PUUID environment variable is not set")
 		fmt.Printf("Error: %v\n", err)
@@ -49,7 +54,7 @@ func MatchesHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client, client *fast
 	ctx.Response.SetStatusCode(fasthttp.StatusOK)
 	response := &utils.DefaultResponse{
 		Status: fasthttp.StatusOK,
-		Data:   matchesData, // Returns the full API response structure
+		Data:   matchesData,
 	}
 	if err := json.NewEncoder(ctx).Encode(response); err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)

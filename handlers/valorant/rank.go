@@ -13,7 +13,12 @@ import (
 func RankHandler(ctx *fasthttp.RequestCtx, redis rueidis.Client, client *fasthttp.Client) {
 	ctx.Response.Header.SetCanonical([]byte("Content-Type"), []byte("application/json"))
 
-	puuid := os.Getenv("VALORANT_PUUID")
+	var puuid string
+	if p := ctx.UserValue("puuid"); p != nil {
+		puuid = p.(string)
+	} else {
+		puuid = os.Getenv("VALORANT_PUUID")
+	}
 	if puuid == "" {
 		err := fmt.Errorf("VALORANT_PUUID environment variable is not set")
 		fmt.Printf("Error: %v\n", err)

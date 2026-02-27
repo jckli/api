@@ -49,6 +49,12 @@ func InitRoutes(r *router.Router, redis rueidis.Client, fc *fasthttp.Client) {
 	r.GET("/valorant/matches", func(ctx *fasthttp.RequestCtx) {
 		valorant.MatchesHandler(ctx, redis, fc)
 	})
+	r.GET("/valorant/rank/{puuid}", func(ctx *fasthttp.RequestCtx) {
+		valorant.RankHandler(ctx, redis, fc)
+	})
+	r.GET("/valorant/matches/{puuid}", func(ctx *fasthttp.RequestCtx) {
+		valorant.MatchesHandler(ctx, redis, fc)
+	})
 
 	// onedrive routes
 	r.GET("/onedrive", func(ctx *fasthttp.RequestCtx) {
