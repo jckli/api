@@ -20,14 +20,7 @@ const (
 )
 
 func GetAccountRankByPUUID(puuid string, redis rueidis.Client, client *fasthttp.Client) (*HendrikMMRv3Data, error) {
-	reqURL := fmt.Sprintf(
-		"%s/v3/by-puuid/mmr/%s/%s/%s",
-		hendrikBaseURL,
-		defaultRegion,
-		defaultPlatform,
-		puuid,
-	)
-
+	reqURL := fmt.Sprintf("%s/v3/by-puuid/mmr/%s/%s/%s", hendrikBaseURL, defaultRegion, defaultPlatform, puuid)
 	resp, err := doValorantRequest(reqURL, redis, client)
 	if err != nil {
 		return nil, err
@@ -35,44 +28,20 @@ func GetAccountRankByPUUID(puuid string, redis rueidis.Client, client *fasthttp.
 	defer fasthttp.ReleaseResponse(resp)
 
 	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("API error: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+		return nil, fmt.Errorf("API error: %d", resp.StatusCode())
 	}
 
-	wrapper := &HendrikMMRv3Response{}
+	var wrapper HendrikMMRv3Response
 	if err := json.Unmarshal(resp.Body(), &wrapper); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal rank response: %w", err)
+		return nil, err
 	}
 
-	icon, color, bgColor, err := getCompetitiveTierVisuals(wrapper.Data.Current.Tier.ID, redis, client)
-	if err == nil {
-		wrapper.Data.Current.RankIconURL = icon
-		if color != "" {
-			wrapper.Data.Current.RankColor = "#" + color
-		} else {
-			wrapper.Data.Current.RankColor = "#ffffff"
-		}
-		if bgColor != "" {
-			wrapper.Data.Current.RankBackgroundColor = "#" + bgColor
-		} else {
-			wrapper.Data.Current.RankBackgroundColor = "#000000"
-		}
-	} else {
-		wrapper.Data.Current.RankColor = "#ffffff"
-		wrapper.Data.Current.RankBackgroundColor = "#000000"
-	}
-
+	enrichTier(&wrapper.Data.Current.Tier, getTiersMap(redis, client))
 	return &wrapper.Data, nil
 }
 
 func GetMatchesByPUUID(puuid string, redis rueidis.Client, client *fasthttp.Client) ([]EnrichedMatch, error) {
-	reqURL := fmt.Sprintf(
-		"%s/v4/by-puuid/matches/%s/%s/%s",
-		hendrikBaseURL,
-		defaultRegion,
-		defaultPlatform,
-		puuid,
-	)
-
+	reqURL := fmt.Sprintf("%s/v4/by-puuid/matches/%s/%s/%s", hendrikBaseURL, defaultRegion, defaultPlatform, puuid)
 	resp, err := doValorantRequest(reqURL, redis, client)
 	if err != nil {
 		return nil, err
@@ -80,21 +49,24 @@ func GetMatchesByPUUID(puuid string, redis rueidis.Client, client *fasthttp.Clie
 	defer fasthttp.ReleaseResponse(resp)
 
 	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("API error: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+		return nil, fmt.Errorf("API error: %d", resp.StatusCode())
 	}
 
-	rawWrapper := &HendrikMatchv4Response{}
+	var rawWrapper HendrikMatchv4Response
 	if err := json.Unmarshal(resp.Body(), &rawWrapper); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal matches response: %w", err)
+		return nil, err
 	}
 
+	tiersMap := getTiersMap(redis, client)
 	enrichedMatches := make([]EnrichedMatch, 0, len(rawWrapper.Data))
 
-	for _, match := range rawWrapper.Data {
-		stats := calculateMyStats(match, puuid, redis, client)
+	for i := range rawWrapper.Data {
+		for j := range rawWrapper.Data[i].Players {
+			enrichTier(&rawWrapper.Data[i].Players[j].Tier, tiersMap)
+		}
 		enrichedMatches = append(enrichedMatches, EnrichedMatch{
-			MatchV4Data: match,
-			MyStats:     stats,
+			MatchV4Data: rawWrapper.Data[i],
+			MyStats:     calculateMyStats(rawWrapper.Data[i], puuid, redis, client),
 		})
 	}
 
@@ -228,55 +200,44 @@ func calculateMyStats(match MatchV4Data, myPUUID string, redis rueidis.Client, c
 	}
 }
 
-func getCompetitiveTierVisuals(tierID int, redis rueidis.Client, client *fasthttp.Client) (string, string, string, error) {
+func getTiersMap(redis rueidis.Client, client *fasthttp.Client) map[int]TierVisuals {
+	tierMap := make(map[int]TierVisuals)
 	var tiersResp OfficialTiersResponse
 
 	cached, err := utils.GetValorantTiersCache(redis)
-	if err == nil && cached != "" {
-		if err := json.Unmarshal([]byte(cached), &tiersResp); err == nil {
-			return findTierInResponse(tiersResp, tierID)
+	if err != nil || cached == "" || json.Unmarshal([]byte(cached), &tiersResp) != nil {
+		req := fasthttp.AcquireRequest()
+		defer fasthttp.ReleaseRequest(req)
+		req.SetRequestURI(officialContentURL)
+		req.Header.SetMethod("GET")
+
+		resp := fasthttp.AcquireResponse()
+		defer fasthttp.ReleaseResponse(resp)
+
+		if client.Do(req, resp) == nil && json.Unmarshal(resp.Body(), &tiersResp) == nil {
+			_ = utils.SetValorantTiersCache(redis, string(resp.Body()))
 		}
 	}
 
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-	req.SetRequestURI(officialContentURL)
-	req.Header.SetMethod("GET")
-
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp)
-
-	if err := client.Do(req, resp); err != nil {
-		return "", "", "", err
+	if len(tiersResp.Data) > 0 {
+		for _, t := range tiersResp.Data[len(tiersResp.Data)-1].Tiers {
+			c, bg := "#ffffff", "#000000"
+			if len(t.Color) >= 6 {
+				c = "#" + t.Color[:6]
+			}
+			if len(t.BackgroundColor) >= 6 {
+				bg = "#" + t.BackgroundColor[:6]
+			}
+			tierMap[t.Tier] = TierVisuals{Icon: t.LargeIcon, Color: c, BgColor: bg}
+		}
 	}
-
-	if err := json.Unmarshal(resp.Body(), &tiersResp); err != nil {
-		return "", "", "", err
-	}
-
-	if err := utils.SetValorantTiersCache(redis, string(resp.Body())); err != nil {
-		fmt.Printf("Warning: Failed to cache valorant tiers: %v\n", err)
-	}
-
-	return findTierInResponse(tiersResp, tierID)
+	return tierMap
 }
 
-func findTierInResponse(resp OfficialTiersResponse, tierID int) (string, string, string, error) {
-	if len(resp.Data) > 0 {
-		latestEpisode := resp.Data[len(resp.Data)-1]
-		for _, tier := range latestEpisode.Tiers {
-			if tier.Tier == tierID {
-				hex := tier.Color
-				if len(hex) == 8 {
-					hex = hex[:6]
-				}
-				bgHex := tier.BackgroundColor
-				if len(bgHex) == 8 {
-					bgHex = bgHex[:6]
-				}
-				return tier.LargeIcon, hex, bgHex, nil
-			}
-		}
+func enrichTier(tier *PlayerTier, tiersMap map[int]TierVisuals) {
+	if v, exists := tiersMap[tier.ID]; exists {
+		tier.RankIconURL, tier.RankColor, tier.RankBackgroundColor = v.Icon, v.Color, v.BgColor
+	} else {
+		tier.RankColor, tier.RankBackgroundColor = "#ffffff", "#000000"
 	}
-	return "", "ffffff", "000000", fmt.Errorf("tier id %d not found", tierID)
 }

@@ -1,5 +1,13 @@
 package valorant
 
+type PlayerTier struct {
+	ID                  int    `json:"id"`
+	Name                string `json:"name"`
+	RankIconURL         string `json:"rank_icon_url,omitempty"`
+	RankColor           string `json:"rank_color,omitempty"`
+	RankBackgroundColor string `json:"rank_background_color,omitempty"`
+}
+
 type HendrikMMRv3Response struct {
 	Status int              `json:"status"`
 	Data   HendrikMMRv3Data `json:"data"`
@@ -11,16 +19,9 @@ type HendrikMMRv3Data struct {
 		Tag  string `json:"tag"`
 	} `json:"account"`
 	Current struct {
-		Tier struct {
-			ID   int    `json:"id"`
-			Name string `json:"name"`
-		} `json:"tier"`
-		RR  int `json:"rr"`
-		Elo int `json:"elo"`
-
-		RankIconURL         string `json:"rank_icon_url"`
-		RankColor           string `json:"rank_color"`
-		RankBackgroundColor string `json:"rank_background_color"`
+		Tier PlayerTier `json:"tier"`
+		RR   int        `json:"rr"`
+		Elo  int        `json:"elo"`
 	} `json:"current"`
 }
 
@@ -59,9 +60,7 @@ type MatchV4Player struct {
 		Name string `json:"name"`
 	} `json:"agent"`
 	Stats MatchV4Stats `json:"stats"`
-	Tier  struct {
-		Name string `json:"name"`
-	} `json:"tier"`
+	Tier  PlayerTier   `json:"tier"`
 }
 
 type MatchV4Stats struct {
@@ -121,4 +120,8 @@ type OfficialAgentsResponse struct {
 		DisplayName string `json:"displayName"`
 		DisplayIcon string `json:"displayIcon"`
 	} `json:"data"`
+}
+
+type TierVisuals struct {
+	Icon, Color, BgColor string
 }
