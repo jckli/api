@@ -19,6 +19,26 @@ const (
 	defaultPlatform    = "pc"
 )
 
+func doValorantRequest(url string, redis rueidis.Client, client *fasthttp.Client) (*fasthttp.Response, error) {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+
+	req.SetRequestURI(url)
+	req.Header.SetMethod("GET")
+
+	if apiKey := os.Getenv("VALORANT_API_KEY"); apiKey != "" {
+		req.Header.Set("Authorization", apiKey)
+	}
+
+	resp := fasthttp.AcquireResponse()
+	if err := client.Do(req, resp); err != nil {
+		fasthttp.ReleaseResponse(resp)
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+
+	return resp, nil
+}
+
 func GetAccountRankByPUUID(puuid string, redis rueidis.Client, client *fasthttp.Client) (*HendrikMMRv3Data, error) {
 	reqURL := fmt.Sprintf("%s/v3/by-puuid/mmr/%s/%s/%s", hendrikBaseURL, defaultRegion, defaultPlatform, puuid)
 	resp, err := doValorantRequest(reqURL, redis, client)
@@ -58,85 +78,53 @@ func GetMatchesByPUUID(puuid string, redis rueidis.Client, client *fasthttp.Clie
 	}
 
 	tiersMap := getTiersMap(redis, client)
+	agentsMap := getAgentsMap(redis, client)
 	enrichedMatches := make([]EnrichedMatch, 0, len(rawWrapper.Data))
 
-	for i := range rawWrapper.Data {
-		for j := range rawWrapper.Data[i].Players {
-			enrichTier(&rawWrapper.Data[i].Players[j].Tier, tiersMap)
+	for i, match := range rawWrapper.Data {
+		teamRounds := make(map[string]int)
+		for _, t := range match.Teams {
+			r := t.Rounds.Won + t.Rounds.Lost
+			if r == 0 {
+				r = 1
+			}
+			teamRounds[t.TeamID] = r
 		}
+
+		for j, p := range match.Players {
+			enrichTier(&rawWrapper.Data[i].Players[j].Tier, tiersMap)
+			rawWrapper.Data[i].Players[j].Agent.IconURL = agentsMap[strings.ToLower(p.Agent.ID)]
+
+			tr := teamRounds[p.TeamID]
+			if tr == 0 {
+				tr = 1
+			}
+
+			stats := &rawWrapper.Data[i].Players[j].Stats
+			netDamage := stats.Damage.Dealt - stats.Damage.Received
+			totalShots := stats.Headshots + stats.Bodyshots + stats.Legshots
+
+			hsPercent := 0.0
+			if totalShots > 0 {
+				hsPercent = (float64(stats.Headshots) / float64(totalShots)) * 100
+			}
+
+			stats.KDA = fmt.Sprintf("%d/%d/%d", stats.Kills, stats.Deaths, stats.Assists)
+			stats.DamageDeltaPerRound = float64(int((float64(netDamage)/float64(tr))*10)) / 10
+			stats.ACS = float64(int((float64(stats.Score) / float64(tr)) + 0.5))
+			stats.HSPercent = float64(int(hsPercent*10)) / 10
+		}
+
 		enrichedMatches = append(enrichedMatches, EnrichedMatch{
 			MatchV4Data: rawWrapper.Data[i],
-			MyStats:     calculateMyStats(rawWrapper.Data[i], puuid, redis, client),
+			MyStats:     extractMyStats(rawWrapper.Data[i], puuid),
 		})
 	}
 
 	return enrichedMatches, nil
 }
 
-func doValorantRequest(url string, redis rueidis.Client, client *fasthttp.Client) (*fasthttp.Response, error) {
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-
-	req.SetRequestURI(url)
-	req.Header.SetMethod("GET")
-
-	if apiKey := os.Getenv("VALORANT_API_KEY"); apiKey != "" {
-		req.Header.Set("Authorization", apiKey)
-	}
-
-	resp := fasthttp.AcquireResponse()
-	if err := client.Do(req, resp); err != nil {
-		fasthttp.ReleaseResponse(resp)
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-
-	return resp, nil
-}
-
-func getAgentIcon(agentID string, redis rueidis.Client, client *fasthttp.Client) (string, error) {
-	var agentsResp OfficialAgentsResponse
-
-	cached, err := utils.GetValorantAgentsCache(redis)
-	if err == nil && cached != "" {
-		if err := json.Unmarshal([]byte(cached), &agentsResp); err == nil {
-			for _, agent := range agentsResp.Data {
-				if strings.EqualFold(agent.UUID, agentID) {
-					return agent.DisplayIcon, nil
-				}
-			}
-		}
-	}
-
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-	req.SetRequestURI(officialAgentsURL)
-	req.Header.SetMethod("GET")
-
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp)
-
-	if err := client.Do(req, resp); err != nil {
-		return "", err
-	}
-
-	if err := json.Unmarshal(resp.Body(), &agentsResp); err != nil {
-		return "", err
-	}
-
-	if err := utils.SetValorantAgentsCache(redis, string(resp.Body())); err != nil {
-		fmt.Printf("Warning: Failed to cache valorant agents: %v\n", err)
-	}
-
-	for _, agent := range agentsResp.Data {
-		if strings.EqualFold(agent.UUID, agentID) {
-			return agent.DisplayIcon, nil
-		}
-	}
-
-	return "", fmt.Errorf("agent id %s not found", agentID)
-}
-
-func calculateMyStats(match MatchV4Data, myPUUID string, redis rueidis.Client, client *fasthttp.Client) DerivedStats {
+func extractMyStats(match MatchV4Data, myPUUID string) DerivedStats {
 	var me MatchV4Player
 	found := false
 
@@ -152,51 +140,30 @@ func calculateMyStats(match MatchV4Data, myPUUID string, redis rueidis.Client, c
 		return DerivedStats{Result: "Unknown"}
 	}
 
-	result := "Draw"
-	roundsWon, roundsLost := 0, 0
-	totalRounds := 1
+	result, scoreStr := "Draw", "0-0"
 
 	for _, t := range match.Teams {
 		if t.TeamID == me.TeamID {
-			roundsWon = t.Rounds.Won
-			roundsLost = t.Rounds.Lost
-			totalRounds = roundsWon + roundsLost
-
+			scoreStr = fmt.Sprintf("%d-%d", t.Rounds.Won, t.Rounds.Lost)
 			if t.Won {
 				result = "Victory"
-			} else if roundsWon < roundsLost {
+			} else if t.Rounds.Won < t.Rounds.Lost {
 				result = "Defeat"
 			}
 			break
 		}
 	}
 
-	if totalRounds == 0 {
-		totalRounds = 1
-	}
-
-	netDamage := me.Stats.Damage.Dealt - me.Stats.Damage.Received
-	ddPerRound := float64(netDamage) / float64(totalRounds)
-	acs := float64(me.Stats.Score) / float64(totalRounds)
-
-	totalShots := me.Stats.Headshots + me.Stats.Bodyshots + me.Stats.Legshots
-	hsPercent := 0.0
-	if totalShots > 0 {
-		hsPercent = (float64(me.Stats.Headshots) / float64(totalShots)) * 100
-	}
-
-	agentIcon, _ := getAgentIcon(me.Agent.ID, redis, client)
-
 	return DerivedStats{
 		Result:              result,
-		Score:               fmt.Sprintf("%d-%d", roundsWon, roundsLost),
+		Score:               scoreStr,
 		Agent:               me.Agent.Name,
-		AgentIconURL:        agentIcon,
-		KDA:                 fmt.Sprintf("%d/%d/%d", me.Stats.Kills, me.Stats.Deaths, me.Stats.Assists),
+		AgentIconURL:        me.Agent.IconURL,
+		KDA:                 me.Stats.KDA,
 		RankInGame:          me.Tier.Name,
-		DamageDeltaPerRound: float64(int(ddPerRound*10)) / 10,
-		ACS:                 float64(int(acs + 0.5)),
-		HSPercent:           float64(int(hsPercent*10)) / 10,
+		DamageDeltaPerRound: me.Stats.DamageDeltaPerRound,
+		ACS:                 me.Stats.ACS,
+		HSPercent:           me.Stats.HSPercent,
 	}
 }
 
@@ -232,6 +199,30 @@ func getTiersMap(redis rueidis.Client, client *fasthttp.Client) map[int]TierVisu
 		}
 	}
 	return tierMap
+}
+
+func getAgentsMap(redis rueidis.Client, client *fasthttp.Client) map[string]string {
+	agentMap := make(map[string]string)
+	var agentsResp OfficialAgentsResponse
+
+	cached, err := utils.GetValorantAgentsCache(redis)
+	if err != nil || cached == "" || json.Unmarshal([]byte(cached), &agentsResp) != nil {
+		req := fasthttp.AcquireRequest()
+		defer fasthttp.ReleaseRequest(req)
+		req.SetRequestURI(officialAgentsURL)
+		req.Header.SetMethod("GET")
+		resp := fasthttp.AcquireResponse()
+		defer fasthttp.ReleaseResponse(resp)
+
+		if client.Do(req, resp) == nil && json.Unmarshal(resp.Body(), &agentsResp) == nil {
+			_ = utils.SetValorantAgentsCache(redis, string(resp.Body()))
+		}
+	}
+
+	for _, a := range agentsResp.Data {
+		agentMap[strings.ToLower(a.UUID)] = a.DisplayIcon
+	}
+	return agentMap
 }
 
 func enrichTier(tier *PlayerTier, tiersMap map[int]TierVisuals) {

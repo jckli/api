@@ -56,8 +56,9 @@ type MatchV4Player struct {
 	TeamID  string `json:"team_id"`
 	PartyID string `json:"party_id"`
 	Agent   struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		IconURL string `json:"icon_url,omitempty"`
 	} `json:"agent"`
 	Stats MatchV4Stats `json:"stats"`
 	Tier  PlayerTier   `json:"tier"`
@@ -75,6 +76,10 @@ type MatchV4Stats struct {
 		Dealt    int `json:"dealt"`
 		Received int `json:"received"`
 	} `json:"damage"`
+	KDA                 string  `json:"kda"`
+	DamageDeltaPerRound float64 `json:"damage_delta_per_round"`
+	ACS                 float64 `json:"acs"`
+	HSPercent           float64 `json:"hs_percent"`
 }
 
 type MatchV4Team struct {
